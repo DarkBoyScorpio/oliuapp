@@ -25,7 +25,8 @@ json_creds = json.loads(base64.b64decode(GSP_CRED).decode("utf-8"))
 st.set_page_config(
     page_title="ÔLiu F16 - Bán hàng",
     page_icon="./oliu.jpg",                
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 st.markdown("""
 <style>
@@ -33,13 +34,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-menu = st.sidebar.radio("📋 Menu", ["📥 Nhập đơn hàng", "📄 Xem dữ liệu", "📊 Dashboard"], index=0)
-
-import streamlit.components.v1 as components
-
+menu = st.sidebar.radio("📋 Menu", ["📥 Nhập đơn hàng", "📄 Xem dữ liệu", "📊 Dashboard"])
 
 components.html(MEO_HTML, height=80)
-
 
 creds = ServiceAccountCredentials.from_json_keyfile_dict(json_creds, SCOPE)
 client = gspread.authorize(creds)
