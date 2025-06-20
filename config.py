@@ -54,7 +54,7 @@ thoi_gian_nhan_hang = [
                         "Ship chiều thứ 7", 
                         "Ship trưa chiều CN", 
                         "Sau 19g thứ 2", 
-                        "Sau 19g thứ 3"
+                        "Sau 19g thứ 3",
                         "Sau 19g thứ 4"
                         ]
 

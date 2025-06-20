@@ -267,8 +267,8 @@ if menu == "📥 Nhập đơn hàng":
                 kho_nhan = st.selectbox("🏬 Kho nhận hàng", kho_nhan_hang)
             with col2:
                 ten_khach = st.text_input("👥 Tên khách")
-                dia_chi = st.text_input("🏠 Địa chỉ (nếu ship)")
                 hinh_thuc_nhan = st.selectbox("📦 Hình thức nhận hàng", hinh_thuc_nhan_hang)
+                dia_chi = st.text_input("🏠 Địa chỉ (nếu ship)")
                 thoi_gian_nhan = st.selectbox("🕓 Thời gian nhận hàng", thoi_gian_nhan_hang)
             chi_tiet_don = st.text_area("📋 Chi tiết đơn hàng")
 
@@ -326,7 +326,8 @@ if menu == "📥 Nhập đơn hàng":
                         print(f"Lỗi: {e} tại cột {col_idx}")
                         
                 # sheet.append_row(row)
-                st.success("✅ Đơn hàng đã ghi thành công!")
+                stt_don_hang_moi = sheet.row_values(first_empty_row)[0]
+                st.success(f"✅ Đơn hàng đã ghi thành công! STT đơn hàng: **{stt_don_hang_moi}**")
                 st.balloons() 
 
 
