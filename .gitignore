@@ -1,0 +1,5 @@
+.env
+test_nb.ipynb
+.streamlit/secrets.toml
+__pycache__/
+credentials.json
