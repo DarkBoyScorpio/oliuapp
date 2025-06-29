@@ -1,2 +1,7 @@
 [theme]
-base = "dark"
+base = "light"
+primaryColor = "#0086e0"  # Màu xanh từ logo Oliu
+backgroundColor = "#f5fbff"
+secondaryBackgroundColor = "#e6f7ff"
+textColor = "#000000"
+font = "sans serif"
