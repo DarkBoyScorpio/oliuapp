@@ -117,10 +117,11 @@ def show_dashboard():
         with col2:
             custom_progress_bar(ratio)
 
-
+  
     st.markdown("---")
 
     ### 🏆 VÙNG 2: Top TNV bán hàng
+
     with st.container():
         st.markdown("### 🏆 Đại lộ danh vọng")
 
@@ -132,18 +133,32 @@ def show_dashboard():
             .head(10)
         )
 
-        chart = alt.Chart(top_tnv).mark_bar().encode(
+        base = alt.Chart(top_tnv).encode(
             x=alt.X("TIỀN BÁN HÀNG:Q", title="Doanh số (VND)"),
-            y=alt.Y("TÊN TNV BÁN:N", sort="-x", title="TNV"),
+            y=alt.Y("TÊN TNV BÁN:N", sort="-x", title="TNV")
+        )
+
+        bars = base.mark_bar().encode(
             color=alt.Color("TIỀN BÁN HÀNG:Q", scale=alt.Scale(scheme='greenblue'), legend=None),
-            tooltip=[alt.Tooltip("TÊN TNV BÁN", title="Người bán"), 
-                     alt.Tooltip("TIỀN BÁN HÀNG", title="Tiền bán hàng (VND)", format=",.0f")]
-        ).properties(height=400)
+            tooltip=[
+                alt.Tooltip("TÊN TNV BÁN", title="Người bán"), 
+                alt.Tooltip("TIỀN BÁN HÀNG", title="Tiền bán hàng (VND)", format=",.0f")
+            ]
+        )
+
+        text = base.mark_text(
+            align='left',
+            baseline='middle',
+            dx=3  # khoảng cách với cột
+        ).encode(
+            text=alt.Text("TIỀN BÁN HÀNG:Q", format=",.0f")
+        )
+
+        chart = (bars + text).properties(height=400)
 
         st.altair_chart(chart, use_container_width=True)
 
     st.markdown("---")
-
     ### 📦 VÙNG 3: Thống kê mặt hàng
     with st.container():
         st.markdown("### 📦 Số lượng mặt hàng đã bán")
