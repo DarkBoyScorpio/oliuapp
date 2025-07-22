@@ -130,7 +130,7 @@ def show_dashboard():
             .sum().reset_index()
             .rename(columns={"TIỀN BÁN HÀNG (2)": "TIỀN BÁN HÀNG"})
             .sort_values(by="TIỀN BÁN HÀNG", ascending=False)
-            .head(10)
+            .head(50)
         )
 
         base = alt.Chart(top_tnv).encode(
