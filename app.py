@@ -583,7 +583,7 @@ elif menu == "👉 Về chúng tôi":
     """, unsafe_allow_html=True)
 
     # --- MISSION & ACTIVITIES ---
-    st.markdown("<div class='section-title'>🎯 Hoạt động của Ô LIU</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>🎯 Hoạt động của Ô Liu</div>", unsafe_allow_html=True)
     cols = st.columns(4)
     with cols[0]:
         st.markdown("#### 🎮 Tổ chức ngày hội trò chơi")
@@ -597,7 +597,7 @@ elif menu == "👉 Về chúng tôi":
 
 
     # --- GALLERY ---
-    st.markdown("<div class='section-title'>📸 Một số hình ảnh của Ô LIU</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>📸 Một số hình ảnh của Ô Liu</div>", unsafe_allow_html=True)
 
     image_dir = "static"
     image_files = [f for f in os.listdir(image_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
