@@ -338,7 +338,7 @@ if menu == "📥 Nhập đơn hàng":
 
         # ✅ Nếu đã gửi đơn, hiển thị nút tạo QR
         if st.session_state["don_hang_moi"]:
-            if st.button("💳 Bấm để tạo mã QR thanh toán", type="primary"):
+            if st.button("💳 Bấm vào đây để tạo mã QR thanh toán", type="primary"):
                 stt_don_hang_moi = st.session_state["don_hang_moi"]
                 data = sheet.get_all_values()
                 df = pd.DataFrame(data[5:], columns=data[4])
@@ -476,7 +476,7 @@ elif menu == "📄 Xem dữ liệu":
                         thong_tin_dat_hang[k] = v
 
                 # --- 3. Hiển thị bảng thông tin ---
-                if st.button("💳 Bấm để tạo mã QR thanh toán"):
+                if st.button("💳 Bấm vào đây để tạo mã QR thanh toán"):
                     amount = int(filtered_data['TỔNG TIỀNCẦN TRẢ(1)+(2)'].replace('.', ''))
                     ten_tnv_ban = convert_name(filtered_data['TÊN TNV BÁN'])
                     ndck = f"Oliu {str(stt_input)} {ten_tnv_ban}"
@@ -513,11 +513,10 @@ elif menu == "👉 Về chúng tôi":
     st.markdown("""
     <style>
     .hero-title {
-        text-align: center;
+        text-align: left;
         color: #1E3A8A;
         font-size: 3em;
         font-weight: bold;
-        margin: 30px 0;
         font-family: 'Montserrat', sans-serif;
     }
     .section-title {
@@ -584,8 +583,8 @@ elif menu == "👉 Về chúng tôi":
     """, unsafe_allow_html=True)
 
     # --- MISSION & ACTIVITIES ---
-    st.markdown("<div class='section-title'>🎯 Hoạt động của chúng tôi</div>", unsafe_allow_html=True)
-    cols = st.columns(3)
+    st.markdown("<div class='section-title'>🎯 Hoạt động của Ô LIU</div>", unsafe_allow_html=True)
+    cols = st.columns(4)
     with cols[0]:
         st.markdown("#### 🎮 Tổ chức ngày hội trò chơi")
         st.image("image/hoichobe.jpg", use_container_width =True)
@@ -598,7 +597,7 @@ elif menu == "👉 Về chúng tôi":
 
 
     # --- GALLERY ---
-    st.markdown("<div class='section-title'>📸 Khoảnh khắc đáng nhớ</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>📸 Một số hình ảnh của Ô LIU</div>", unsafe_allow_html=True)
 
     image_dir = "static"
     image_files = [f for f in os.listdir(image_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
