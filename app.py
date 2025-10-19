@@ -23,16 +23,14 @@ GSP_CRED = get_secret("GSP_CRED")
 json_creds = json.loads(base64.b64decode(GSP_CRED).decode("utf-8"))
 
 st.set_page_config(
-    page_title="ÔLiu F16 - Bán hàng",
+    page_title="ÔLiu F17 - Bán hàng",
     page_icon="./oliu.jpg",                
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 
-menu = st.sidebar.radio("📋 Menu", ["📥 Nhập đơn hàng", "📄 Xem dữ liệu", "📊 Dashboard"])
-
-components.html(MEO_HTML, height=80)
+menu = st.sidebar.radio("📋 Menu", ["📥 Nhập đơn hàng", "📄 Xem dữ liệu", "📊 Thống kê", "👉 Về chúng tôi"])
 
 creds = ServiceAccountCredentials.from_json_keyfile_dict(json_creds, SCOPE)
 client = gspread.authorize(creds)
@@ -160,30 +158,11 @@ def show_dashboard():
 
     st.markdown("---")
     ### 📦 VÙNG 3: Thống kê mặt hàng
-    with st.container():
-        st.markdown("### 📦 Số lượng mặt hàng đã bán")
-
-        product_columns = df.columns[15:36]
-        product_data = df[product_columns].apply(pd.to_numeric, errors="coerce").fillna(0)
-        product_summary = product_data.sum().sort_values(ascending=False).reset_index()
-        product_summary.columns = ["Mặt hàng", "Số lượng"]
-
-        col1, col2 = st.columns([2, 3])
-        with col1:
-            st.dataframe(product_summary, use_container_width=True)
-
-        with col2:
-            bar = alt.Chart(product_summary).mark_bar().encode(
-                x=alt.X("Số lượng:Q"),
-                y=alt.Y("Mặt hàng:N", sort="-x"),
-                color=alt.Color("Số lượng:Q", scale=alt.Scale(scheme='yellowgreenblue'), legend=None),
-                tooltip=["Mặt hàng", "Số lượng"]
-            ).properties(height=400)
-
-            st.altair_chart(bar, use_container_width=True)
             
     with st.container():
         st.markdown("### 💵 Doanh thu theo mặt hàng")
+        product_columns = df.columns[15:36]
+        product_data = df[product_columns].apply(pd.to_numeric, errors="coerce").fillna(0)
         mat_hang_so_luong = product_data.sum().to_dict()
 
         # 👉 Tạo dataframe doanh thu
@@ -226,7 +205,6 @@ def show_dashboard():
             st.altair_chart(chart_revenue, use_container_width=True)
 
 
-
 ### main code ###
 def validate_required():
     if not ten_tnv.strip():
@@ -261,10 +239,10 @@ def show_qr_thanh_toan(amount: int, ndck: str):
         data = res.json()
         qr_url = data['data']['qrDataURL']
         st.image(qr_url, caption="Quét để chuyển khoản", use_container_width=True)
-    
 
 
 if menu == "📥 Nhập đơn hàng":
+    components.html(MEO_HTML, height=80)
     st.title("📦 Nhập đơn hàng")
     st.markdown("Vui lòng điền các thông tin bên dưới. Sau đó ấn Xác nhận & Gửi đơn")
     with st.form("form_nhap_don"):
@@ -394,7 +372,6 @@ if menu == "📥 Nhập đơn hàng":
                     st.session_state["don_hang_moi"] = None
 
 
-
     if submitted:
         missing_field = validate_required()
         if missing_field:
@@ -462,6 +439,7 @@ if menu == "📥 Nhập đơn hàng":
 
 
 elif menu == "📄 Xem dữ liệu":
+    components.html(MEO_HTML, height=80)
     st.title("📄 Dữ liệu đơn hàng")
     data = sheet.get_all_values()
     df = pd.DataFrame(data[5:], columns=data[4])
@@ -470,7 +448,7 @@ elif menu == "📄 Xem dữ liệu":
 
     # --- Giao diện nhập STT ---
     with st.form("form_stt"):
-        stt_input = st.number_input("🔢 Nhập STT đơn hàng để tra cứu:", min_value=1, step=1)
+        stt_input = st.number_input("🔢 Nhập STT đơn hàng để tra cứu hoặc tạo mã QR thanh toán:", min_value=1, step=1)
         submitted = st.form_submit_button("Enter")
 
     # --- Nếu nhấn Enter ---
@@ -515,16 +493,237 @@ elif menu == "📄 Xem dữ liệu":
                     st.info("Khách hàng chưa đặt mặt hàng nào.")
                         # Gọi dialog       
             show_data()
+    st.markdown(
+                """
+                <div style="text-align: center; font-size: 13px; color: gray;">
+                    Sheet đang hiển thị chỉ có quyền xem, không thể chỉnh sửa
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
     embed_url = SHARE_URL.replace("/edit", "/preview")
     components.iframe(embed_url, height=600, scrolling=True)
-    st.markdown(
-                    """
-                    <div style="text-align: center; font-size: 13px; color: gray;">
-                        Sheet đang hiển thị chỉ có quyền xem, không thể chỉnh sửa
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
 
-elif menu == "📊 Dashboard":
+elif menu == "📊 Thống kê":
+    components.html(MEO_HTML, height=80)
     show_dashboard()
+
+
+elif menu == "👉 Về chúng tôi":
+    st.markdown("""
+    <style>
+    .hero-title {
+        text-align: center;
+        color: #1E3A8A;
+        font-size: 3em;
+        font-weight: bold;
+        margin: 30px 0;
+        font-family: 'Montserrat', sans-serif;
+    }
+    .section-title {
+        font-size: 2em;
+        font-weight: 700;
+        margin: 40px 0 20px;
+        color: #002B5B;
+    }
+    </style>
+
+    <div class="hero-title">
+        <h1>Đội tình nguyện ÔLiu</h1>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+    # --- ABOUT US ---
+    st.markdown("<div class='section-title'>📝 Giới thiệu</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    .about-container {
+        max-width: 1000px;
+        margin: 0;
+        padding: 20px 25px;
+        border-radius: 16px;
+        background: #E6F0FF; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        box-sizing: border-box;
+    }
+
+    .about-text {
+        text-align: justify;
+        line-height: 1.6;
+        color: #002B5B;
+        font-size: 1.05rem;
+        word-wrap: break-word;
+    }
+
+    .about-text p {
+        margin-bottom: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .about-container {
+            padding: 15px 15px;
+        }
+        .about-text {
+            font-size: 0.98rem;
+            line-height: 1.5;
+        }
+    }
+    </style>
+
+    <div class="about-container">
+    <div class="about-text">
+    <p><b>[Ô liu - Olympia In U]</b></p>
+    <p>Mọi người đều biết đến “Đường lên đỉnh Olympia” (DLDO) là một chương trình truyền hình dành cho tất cả các bạn học sinh phổ thông trên toàn quốc, nơi thể hiện kiến thức, bản lĩnh của các nhà leo núi qua từng câu hỏi. Không chỉ thế, Olympia còn là một ngã rẽ, là cánh cửa mở ra nhiều cơ hội mới, những mối quan hệ mới cho các bạn thí sinh. Hãy để Ô liu kể bạn nghe câu chuyện của một Olympian - cách mà chúng tôi gọi các bạn tham gia DLDO.</p>
+    <p>Kết thúc những trận đấu gay cấn, các bạn rời trường quay trong những cung bậc cảm xúc khác nhau, rồi bạn chợt nhận ra mình đã là một thành viên trong một đại gia đình có tên Olympians - cộng đồng các thí sinh tham gia chương trình DLDO. Olympians luôn cố gắng sẻ chia, góp sức cùng nhau tạo ra những giá trị tốt đẹp cho cuộc sống. Chúng ta gắn kết qua những ngày vui thỏa sức cùng Ono, qua những màn trình diễn ở Olym Acoustic.</p>
+    <p>Với mục đích duy trì và phát triển các giá trị tốt đẹp, tinh thần lan tỏa của "nhóm máu O", đội tình nguyện Ô liu được thành lập cùng fanpage để các bạn Olympians và mọi người nói riêng có thể theo dõi, đồng hành cũng như chung tay giúp đỡ những hoàn cảnh khó khăn, góp sức trẻ tạo nên giá trị tử tế.</p>
+    <p>Ô liu rất mong nhận được sự quan tâm của các bạn gần xa, nhất là những bạn không phải Olympian. Chúng ta hãy cùng nhau tạo ra giá trị khác biệt. Khi bạn cho đi, bạn chắc chắn sẽ nhận lại nhiều hơn những gì bạn đang có.</p>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # --- MISSION & ACTIVITIES ---
+    st.markdown("<div class='section-title'>🎯 Hoạt động của chúng tôi</div>", unsafe_allow_html=True)
+    cols = st.columns(3)
+    with cols[0]:
+        st.markdown("#### 🎮 Tổ chức ngày hội trò chơi")
+        st.image("image/hoichobe.jpg", use_container_width =True)
+    with cols[1]:
+        st.markdown("#### 🎁 Trao quà và học bổng cho các em học sinh")
+        st.image("image/hocbong.jpg", use_container_width =True)
+    with cols[2]:
+        st.markdown("#### 💝 Thăm hỏi, tặng quà hộ gia đình khó khăn")
+        st.image("image/thamhoi.jpg", use_container_width =True)
+
+
+    # --- GALLERY ---
+    st.markdown("<div class='section-title'>📸 Khoảnh khắc đáng nhớ</div>", unsafe_allow_html=True)
+
+    image_dir = "static"
+    image_files = [f for f in os.listdir(image_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+    image_files.sort()
+
+    def img_to_base64(path):
+        with open(path, "rb") as f:
+            data = base64.b64encode(f.read()).decode()
+        ext = os.path.splitext(path)[1].lower().replace('.', '')
+        return f"data:image/{ext};base64,{data}"
+
+    images = [img_to_base64(os.path.join(image_dir, f)) for f in image_files]
+
+    slider_html = f"""
+    <style>
+    .wrapper {{
+    width: 100%;
+    overflow: hidden;
+    background: linear-gradient(to right, var(--background-color), var(--secondary-background-color));
+    padding: 30px 0;
+    border-radius: 20px;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+    position: relative;
+    }}
+
+    .track {{
+    display: flex;
+    width: max-content;
+    animation: moveRight 40s linear infinite;
+    }}
+
+    @keyframes moveRight {{
+    0%   {{ transform: translateX(-50%); }}
+    100% {{ transform: translateX(0%); }}
+    }}
+
+    .track img {{
+    height: 230px;
+    width: auto;
+    margin-right: 20px;
+    border-radius: 16px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    transition: transform 0.4s ease;
+    flex-shrink: 0;
+    background-color: var(--secondary-background-color);
+    }}
+
+    .track img:hover {{
+    transform: scale(1.05);
+    }}
+    </style>
+
+    <div class="wrapper">
+    <div class="track">
+        {''.join([f'<img src="{img}">' for img in images])}
+        {''.join([f'<img src="{img}">' for img in images])}
+    </div>
+    </div>
+    """
+    st.markdown(slider_html, unsafe_allow_html=True)
+
+
+    # --- CONTACT / SOCIAL ---
+    st.markdown("<div class='section-title'>📬 Thông tin liên hệ</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    .contact-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 25px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #E6F0FF, #FFFFFF);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        box-sizing: border-box;
+        text-align: center;
+    }
+    .contact-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #002B5B;
+        margin-bottom: 30px;
+    }
+    .social-icons {
+        display: flex;
+        justify-content: center;
+        gap: 25px;
+        flex-wrap: wrap;
+    }
+    .social-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 15px;
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .social-card:hover {
+        transform: translateY(-5px) scale(1.1);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .social-card svg {
+        width: 32px;
+        height: 32px;
+        fill: #002B5B; /* màu chủ đạo */
+        transition: fill 0.3s ease;
+    }
+    .social-card:hover svg {
+        fill: #FF8C42; /* màu hover nổi bật */
+    }
+    </style>
+
+    <div class="contact-container">
+        <div class="contact-text">
+            <b>Email:</b> tinhnguyenoliu@gmail.com<br>
+            <b>Trưởng BTC - Nhật Trình:</b> 0388534146<br>
+            <b>Phụ trách gây quỹ - Thảo Trang:</b> 0901367931<br>
+            <b><br>
+            <div class="social-icons">
+                <a href="https://www.facebook.com/oliufanpage" target="_blank" class="social-card"><img src="https://cdn-icons-png.flaticon.com/512/733/733547.png"></a>
+                <a href="https://www.tiktok.com/@tinhnguyenoliu" target="_blank" class="social-card"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046122.png"></a>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
