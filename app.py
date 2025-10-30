@@ -244,7 +244,7 @@ def show_qr_thanh_toan(amount: int, ndck: str):
 if menu == "📥 Nhập đơn hàng":
     components.html(MEO_HTML, height=80)
     st.title("📦 Nhập đơn hàng")
-    st.markdown("Vui lòng điền các thông tin bên dưới. Sau đó ấn Xác nhận & Gửi đơn")
+    st.markdown("Vui lòng điền các thông tin bên dưới. Sau đó ấn 'Xác nhận & Gửi đơn'")
     with st.form("form_nhap_don"):
         # ==== PHẦN 1: Thông tin khách hàng ====
         with st.expander("ℹ️ Thông tin khách hàng", expanded=False):
@@ -305,7 +305,7 @@ if menu == "📥 Nhập đơn hàng":
     if "don_hang_moi" not in st.session_state:
         st.session_state["don_hang_moi"] = None
 
-    @st.dialog(title="🧾 Tổng kết đơn hàng:", width="large")
+    @st.dialog(title="🧾 Xác nhận đơn hàng:", width="large")
     def show_data(tong_ket, mat_hang_co_mua, row):
         st.subheader("📌 Thông tin khách hàng")
         df_tong_ket = pd.DataFrame([(k, str(v)) for k, v in tong_ket.items()], columns=["Cột", "Giá trị"])
@@ -315,15 +315,17 @@ if menu == "📥 Nhập đơn hàng":
         df_hang = pd.DataFrame(list(mat_hang_co_mua.items()), columns=["Mặt hàng", "Số lượng"])
         st.table(df_hang)
 
-        tong_ket.update(mat_hang_co_mua)
+        # tong_ket.update(mat_hang_co_mua)
 
         if st.button("📩 Gửi đơn"):
             with st.spinner("⏳ Đang xử lý đơn hàng..."):
                 column_values = sheet.col_values(2)
                 first_empty_row = len(column_values) + 1
-                for col_idx in range(1, 41):
+                stt_last_row = sheet.row_values(first_empty_row - 1)[0]
+                row[0] = int(stt_last_row) + 1
+                for col_idx in range(1, 42):
                     try:
-                        value = row[col_idx - 1]
+                        value = row[col_idx-1]
                         if value == "":
                             continue
                         sheet.update_cell(first_empty_row, col_idx, value)
@@ -333,10 +335,10 @@ if menu == "📥 Nhập đơn hàng":
                 stt_don_hang_moi = sheet.row_values(first_empty_row)[0]
                 st.toast("✅ Đơn hàng đã ghi thành công!")
                 st.toast(f"STT đơn hàng: **{stt_don_hang_moi}**")
-                # ✅ Lưu trạng thái đơn hàng đã gửi
+                # Lưu trạng thái đơn hàng đã gửi
                 st.session_state["don_hang_moi"] = stt_don_hang_moi
 
-        # ✅ Nếu đã gửi đơn, hiển thị nút tạo QR
+        # Nếu đã gửi đơn, hiển thị nút tạo QR
         if st.session_state["don_hang_moi"]:
             if st.button("💳 Bấm vào đây để tạo mã QR thanh toán", type="primary"):
                 stt_don_hang_moi = st.session_state["don_hang_moi"]
