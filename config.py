@@ -47,15 +47,12 @@ product_column_map = {
     "Điều mắm ớt 500g": 36,
 }
 
-kho_nhan_hang=["Q8 - Bến Bình Đông", "Chu Văn An - Bình Thạnh"]
+kho_nhan_hang=["Quận 2"]
 hinh_thuc_nhan_hang = ["Nhận hàng trực tiếp tại kho", "Nhờ shop đặt ship"]
 thoi_gian_nhan_hang = [
                         "",
-                        "Ship chiều thứ 7", 
-                        "Ship trưa chiều CN", 
-                        "Sau 19g thứ 2", 
-                        "Sau 19g thứ 3",
-                        "Sau 19g thứ 4"
+                        "Ship thứ 7", 
+                        "Ship CN", 
                         ]
 
 
