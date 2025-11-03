@@ -478,22 +478,84 @@ elif menu == "📄 Xem dữ liệu":
                         thong_tin_dat_hang[k] = v
 
                 # --- 3. Hiển thị bảng thông tin ---
-                if st.button("💳 Bấm vào đây để tạo mã QR thanh toán"):
-                    amount = int(filtered_data['TỔNG TIỀNCẦN TRẢ(1)+(2)'].replace('.', ''))
-                    ten_tnv_ban = convert_name(filtered_data['TÊN TNV BÁN'])
-                    ndck = f"Oliu {str(stt_input)} {ten_tnv_ban}"
-                    show_qr_thanh_toan(amount, ndck)
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    if st.button("💳 Bấm vào đây để tạo mã QR thanh toán"):
+                        amount = int(filtered_data['TỔNG TIỀNCẦN TRẢ(1)+(2)'].replace('.', ''))
+                        ten_tnv_ban = convert_name(filtered_data['TÊN TNV BÁN'])
+                        ndck = f"Oliu {str(stt_input)} {ten_tnv_ban}"
+                        show_qr_thanh_toan(amount, ndck)
                 
-                st.subheader("📌 Thông tin khách hàng")
-                st.table(pd.DataFrame(list(thong_tin_dat_hang.items()), columns=["Thông tin", "Giá trị"]))
+                df_khach_hang = pd.DataFrame(list(thong_tin_dat_hang.items()), columns=["Thông tin", "Giá trị"])
+                df_mon_hang = pd.DataFrame(list(mon_hang_da_mua.items()), columns=["Sản phẩm", "Số lượng"])
+                
+                df_khach_hang_in = df_khach_hang.drop(range(8, 12))
+                df_khach_hang_in.at[3, "Thông tin"] = "CHI TIẾT ĐƠN"
+                df_khach_hang_in.at[6, "Thông tin"] = "TỔNG TIỀN CẦN TRẢ"
+                df_khach_hang_in.at[7, "Thông tin"] = "TIỀN HÀNG"
 
+                with col2:
+                    html_code = f"""
+
+                        <div id="print-area" style="display:none;">
+                            <h3>📌 Thông tin khách hàng</h3>
+                            {df_khach_hang_in.to_html(index=False, border=1)}
+
+                            <h3>🛒 Mặt hàng đã đặt</h3>
+                            {df_mon_hang.to_html(index=False, border=1)}
+                        </div>
+
+                        <button id="printBtn" style="
+                            background-color:#000000; 
+                            color:white; 
+                            padding:0.4rem 0.9rem; 
+                            border:none; 
+                            border-radius:0.5rem; 
+                            cursor:pointer; 
+                            margin-top:-6px; 
+                            vertical-align:middle;
+                            font-family: 'Source Sans Pro', sans-serif; 
+                            font-size:1rem; 
+                            font-weight:400;
+                            line-height:1.5;
+                        ">
+                            🖨️ In đơn hàng
+                        </button>
+
+                        <script>
+                        document.getElementById("printBtn").addEventListener("click", function() {{
+                            const printArea = document.getElementById("print-area");
+                            if (!printArea) {{
+                                alert("Không tìm thấy nội dung để in!");
+                                return;
+                            }}
+                            const printWindow = window.open('', '', 'width=800,height=600');
+                            printWindow.document.write('<html><head><title>In đơn hàng</title>');
+                            printWindow.document.write('<style>');
+                            printWindow.document.write('body{{font-family:Arial;padding:20px;}}');
+                            printWindow.document.write('table{{border-collapse:collapse;width:100%;margin-top:10px;}}');
+                            printWindow.document.write('th,td{{border:1px solid #ccc;padding:8px;text-align:left;}}');
+                            printWindow.document.write('</style></head><body>');
+                            printWindow.document.write(printArea.innerHTML);
+                            printWindow.document.write('</body></html>');
+                            printWindow.document.close();
+                            printWindow.focus();
+                            printWindow.print();
+                        }});
+                        </script>
+                        """
+
+                    components.html(html_code, height=80)
+                
                 # --- 4. Hiển thị bảng mặt hàng ---
+                st.subheader("📌 Thông tin khách hàng")
+                st.table(df_khach_hang)
                 if mon_hang_da_mua:
                     st.subheader("🛒 Mặt hàng đã đặt")
-                    st.table(pd.DataFrame(list(mon_hang_da_mua.items()), columns=["Sản phẩm", "Số lượng"]))
+                    st.table(df_mon_hang)
                 else:
                     st.info("Khách hàng chưa đặt mặt hàng nào.")
-                        # Gọi dialog       
+
             show_data()
     st.markdown(
                 """
