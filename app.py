@@ -8,7 +8,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from dotenv import load_dotenv
 from config import (
-                    gia_mat_hang, product_column_map, kho_nhan_hang, hinh_thuc_nhan_hang, thoi_gian_nhan_hang, 
+                    gia_mat_hang, product_column_map, thoi_gian_nhan_hang, 
                     TARGET_SALES, SCOPE, STK, TEN_CHU_TK, BIN_BANK, MEO_HTML
                 )
 
@@ -161,7 +161,7 @@ def show_dashboard():
             
     with st.container():
         st.markdown("### 💵 Doanh thu theo mặt hàng")
-        product_columns = df.columns[15:36]
+        product_columns = df.columns[14:33]
         product_data = df[product_columns].apply(pd.to_numeric, errors="coerce").fillna(0)
         mat_hang_so_luong = product_data.sum().to_dict()
 
@@ -176,33 +176,35 @@ def show_dashboard():
             for ten, so_luong in mat_hang_so_luong.items()
             if so_luong > 0
         ])
+        if not df_doanh_thu.empty:
+            df_doanh_thu = df_doanh_thu.sort_values(by="Doanh thu (VND)", ascending=False).reset_index(drop=True)
+            tong_tien = df_doanh_thu["Doanh thu (VND)"].sum()
+            
+            st.markdown(f" #### **Tổng doanh thu các mặt hàng:** `{tong_tien:,.0f} VND`")
+            
+            col1, col2 = st.columns([2, 3])
+            with col1:
+                st.dataframe(df_doanh_thu.reset_index(drop=True).style.format({
+                            "Giá bán (VND)": lambda x: f"{x:,.0f}".replace(",", "."),
+                            "Doanh thu (VND)": lambda x: f"{x:,.0f}".replace(",", "."),
+                            "Số lượng": lambda x: f"{x:,.0f}".replace(",", ".")
+                        }), use_container_width=True)
+            with col2:
+                chart_revenue = alt.Chart(df_doanh_thu).mark_bar().encode(
+                    x=alt.X("Doanh thu (VND):Q", title="Doanh thu (VND)"),
+                    y=alt.Y("Mặt hàng:N", sort="-x"),
+                    color=alt.Color("Doanh thu (VND):Q", scale=alt.Scale(scheme="greens"), legend=None),
+                    tooltip=[
+                        alt.Tooltip("Mặt hàng", title="Tên sản phẩm"),
+                        alt.Tooltip("Số lượng", title="Số lượng"),
+                        alt.Tooltip("Giá bán (VND)", title="Giá 1 SP", format=",.0f"),
+                        alt.Tooltip("Doanh thu (VND)", title="Doanh thu", format=",.0f")
+                    ]
+                ).properties(height=500)
 
-        df_doanh_thu = df_doanh_thu.sort_values(by="Doanh thu (VND)", ascending=False).reset_index(drop=True)
-        tong_tien = df_doanh_thu["Doanh thu (VND)"].sum()
-        
-        st.markdown(f" #### **Tổng doanh thu các mặt hàng:** `{tong_tien:,.0f} VND`")
-        
-        col1, col2 = st.columns([2, 3])
-        with col1:
-            st.dataframe(df_doanh_thu.reset_index(drop=True).style.format({
-                        "Giá bán (VND)": lambda x: f"{x:,.0f}".replace(",", "."),
-                        "Doanh thu (VND)": lambda x: f"{x:,.0f}".replace(",", "."),
-                        "Số lượng": lambda x: f"{x:,.0f}".replace(",", ".")
-                    }), use_container_width=True)
-        with col2:
-            chart_revenue = alt.Chart(df_doanh_thu).mark_bar().encode(
-                x=alt.X("Doanh thu (VND):Q", title="Doanh thu (VND)"),
-                y=alt.Y("Mặt hàng:N", sort="-x"),
-                color=alt.Color("Doanh thu (VND):Q", scale=alt.Scale(scheme="greens"), legend=None),
-                tooltip=[
-                    alt.Tooltip("Mặt hàng", title="Tên sản phẩm"),
-                    alt.Tooltip("Số lượng", title="Số lượng"),
-                    alt.Tooltip("Giá bán (VND)", title="Giá 1 SP", format=",.0f"),
-                    alt.Tooltip("Doanh thu (VND)", title="Doanh thu", format=",.0f")
-                ]
-            ).properties(height=500)
-
-            st.altair_chart(chart_revenue, use_container_width=True)
+                st.altair_chart(chart_revenue, use_container_width=True)
+        else:
+            st.warning("⚠️ Chưa có mặt hàng nào để tính doanh thu.")
 
 
 ### main code ###
@@ -211,10 +213,6 @@ def validate_required():
         return "Tên TNV bán"
     if not ten_khach.strip():
         return "Tên khách"
-    if not hinh_thuc_nhan.strip():
-        return "Hình thức nhận hàng"
-    if not kho_nhan.strip():
-        return "Kho nhận hàng"
     if not chi_tiet_don.strip():
         return "Chi tiết đơn hàng"
     return None
@@ -238,7 +236,17 @@ def show_qr_thanh_toan(amount: int, ndck: str):
         })
         data = res.json()
         qr_url = data['data']['qrDataURL']
-        st.image(qr_url, caption="Quét để chuyển khoản", use_container_width=True)
+        st.markdown(
+            f"""
+            <div style='text-align:center;'>
+                <img src="{qr_url}" 
+                    alt="QR Thanh toán"
+                    style="max-width:60%; height:auto; border-radius:10px;" />
+                <p><em>📱 Quét để chuyển khoản</em></p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 
 if menu == "📥 Nhập đơn hàng":
@@ -250,16 +258,14 @@ if menu == "📥 Nhập đơn hàng":
         with st.expander("ℹ️ Thông tin khách hàng", expanded=False):
             col1, col2 = st.columns(2)
             with col1:
-                ten_tnv = st.text_input("👤 Tên TNV bán")
+                ten_tnv = st.text_input("👤 Tên TNV bán *")
                 sdt = st.text_input("📞 SĐT khách")
                 quan_tinh = st.text_input("🗺️ Quận/Tỉnh")
-                kho_nhan = st.selectbox("🏬 Kho nhận hàng", kho_nhan_hang)
             with col2:
-                ten_khach = st.text_input("👥 Tên khách")
-                hinh_thuc_nhan = st.selectbox("📦 Hình thức nhận hàng", hinh_thuc_nhan_hang)
+                ten_khach = st.text_input("👥 Tên khách *")
                 dia_chi = st.text_input("🏠 Địa chỉ (nếu ship)")
                 thoi_gian_nhan = st.selectbox("🕓 Thời gian nhận hàng", thoi_gian_nhan_hang)
-            chi_tiet_don = st.text_area("📋 Chi tiết đơn hàng")
+            chi_tiet_don = st.text_area("📋 Chi tiết đơn hàng *")
 
         # ==== PHẦN 2: Mật ong, Mắm, Điều ====
         with st.expander("🍯 Mật ong, Mắm, Điều", expanded=False):
@@ -278,16 +284,15 @@ if menu == "📥 Nhập đơn hàng":
             col1, col2 = st.columns(2)
             with col1:
                 mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, step=1)
-                chuoi_250g = st.number_input("🍌 Chuối sấy mộc 250g", min_value=0, step=1)
                 ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, step=1)
                 ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, step=1)
                 km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, step=1)
             with col2:
                 thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, step=1)
-                chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, step=1)
                 ktrb_500g = st.number_input("🥔 Khoai tây rong biển 500g", min_value=0, step=1)
                 ktmam_500g = st.number_input("🥔 Khoai tây mắm 500g", min_value=0, step=1)
                 km_trung_cua_500g = st.number_input("🍠 Khoai môn trứng cua 500g", min_value=0, step=1)
+                chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, step=1)
         
         with st.expander("🍚 Cơm cháy, Bánh tráng mắm", expanded=False):
             col1, col2 = st.columns(2)
@@ -370,7 +375,17 @@ if menu == "📥 Nhập đơn hàng":
                     })
                     data = res.json()
                     qr_url = data['data']['qrDataURL']
-                    st.image(qr_url, caption="Quét để chuyển khoản", use_container_width=True)
+                    st.markdown(
+                        f"""
+                        <div style='text-align:center;'>
+                            <img src="{qr_url}" 
+                                alt="QR Thanh toán"
+                                style="max-width:60%; height:auto; border-radius:10px;" />
+                            <p><em>📱 Quét để chuyển khoản</em></p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
                     st.session_state["don_hang_moi"] = None
 
 
@@ -385,8 +400,6 @@ if menu == "📥 Nhập đơn hàng":
                 "SĐT khách": sdt,
                 "Địa chỉ": dia_chi,
                 "Quận/Tỉnh": quan_tinh,
-                "Kho nhận hàng": kho_nhan,
-                "Hình thức nhận hàng": hinh_thuc_nhan,
                 "Thời gian nhận hàng": str(thoi_gian_nhan),
                 "Chi tiết đơn": chi_tiet_don
             }
@@ -395,7 +408,6 @@ if menu == "📥 Nhập đơn hàng":
             mat_hang = {
                 "Mít 500g": mit_500g,
                 "Thập cẩm 500g": thap_cam_500g,
-                "Chuối mộc 250g": chuoi_250g,
                 "Chuối mộc 500g": chuoi_500g,           
                 "Khoai tây rong biển 250g": ktrb_250g,
                 "Khoai tây rong biển 500g": ktrb_500g,
@@ -428,9 +440,7 @@ if menu == "📥 Nhập đơn hàng":
             row[4] = sdt
             row[5] = dia_chi
             row[6] = quan_tinh
-            row[7] = hinh_thuc_nhan
-            row[8] = kho_nhan
-            row[9] = str(thoi_gian_nhan)
+            row[7] = str(thoi_gian_nhan)
 
             # Gán các mặt hàng có mua vào đúng cột
             for name, quantity in mat_hang_co_mua.items():
@@ -480,19 +490,24 @@ elif menu == "📄 Xem dữ liệu":
                 # --- 3. Hiển thị bảng thông tin ---
                 col1, col2 = st.columns([1, 1])
                 with col1:
-                    if st.button("💳 Bấm vào đây để tạo mã QR thanh toán"):
-                        amount = int(filtered_data['TỔNG TIỀNCẦN TRẢ(1)+(2)'].replace('.', ''))
-                        ten_tnv_ban = convert_name(filtered_data['TÊN TNV BÁN'])
-                        ndck = f"Oliu {str(stt_input)} {ten_tnv_ban}"
-                        show_qr_thanh_toan(amount, ndck)
+                    create_qr = st.button("💳 Bấm vào đây để tạo mã QR thanh toán")
+                
+                if create_qr:
+                    amount = int(filtered_data['TỔNG TIỀNCẦN TRẢ(1)+(2)'].replace('.', ''))
+                    ten_tnv_ban = convert_name(filtered_data['TÊN TNV BÁN'])
+                    ndck = f"Oliu {str(stt_input)} {ten_tnv_ban}"
+                    show_qr_thanh_toan(amount, ndck)
                 
                 df_khach_hang = pd.DataFrame(list(thong_tin_dat_hang.items()), columns=["Thông tin", "Giá trị"])
                 df_mon_hang = pd.DataFrame(list(mon_hang_da_mua.items()), columns=["Sản phẩm", "Số lượng"])
                 
-                df_khach_hang_in = df_khach_hang.drop(range(8, 12))
-                df_khach_hang_in.at[3, "Thông tin"] = "CHI TIẾT ĐƠN"
-                df_khach_hang_in.at[6, "Thông tin"] = "TỔNG TIỀN CẦN TRẢ"
-                df_khach_hang_in.at[7, "Thông tin"] = "TIỀN HÀNG"
+                df_khach_hang_in = df_khach_hang[df_khach_hang["Thông tin"] != "Đã thanh toán"]
+                df_khach_hang_in = df_khach_hang_in[df_khach_hang_in["Thông tin"] != "ĐÃ SOẠN ĐƠN"]
+                df_khach_hang_in = df_khach_hang_in[df_khach_hang_in["Thông tin"] != "ĐÃ GIAO TNV(TNV điền hoặc người giao điền)"]
+
+                df_khach_hang_in.loc[df_khach_hang_in["Thông tin"] == "CHI TIẾT ĐƠN (VUI LÒNG ĐIỀN CHÍNH XÁC VỚI Ô CỘT SỐ LƯỢNG BÊN PHẢI)", "Thông tin"] = "CHI TIẾT ĐƠN"
+                df_khach_hang_in.loc[df_khach_hang_in["Thông tin"] == "TỔNG TIỀNCẦN TRẢ(1)+(2)", "Thông tin"] = "TỔNG TIỀN CẦN TRẢ"
+                df_khach_hang_in.loc[df_khach_hang_in["Thông tin"] == "TIỀN BÁN HÀNG (2)", "Thông tin"] = "TIỀN HÀNG"
 
                 with col2:
                     html_code = f"""
