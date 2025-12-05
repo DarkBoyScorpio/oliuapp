@@ -286,12 +286,12 @@ if menu == "📥 Nhập đơn hàng":
                 mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, step=1)
                 ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, step=1)
                 ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, step=1)
-                km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, step=1, disabled=True)
+                km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, step=1)
             with col2:
                 thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, step=1)
                 ktrb_500g = st.number_input("🥔 Khoai tây rong biển 500g", min_value=0, step=1)
                 ktmam_500g = st.number_input("🥔 Khoai tây mắm 500g", min_value=0, step=1)
-                km_trung_cua_500g = st.number_input("🍠 Khoai môn trứng cua 500g", min_value=0, step=1, disabled=True)
+                km_trung_cua_500g = st.number_input("🍠 Khoai môn trứng cua 500g", min_value=0, step=1)
                 chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, step=1)
         
         with st.expander("🍚 Cơm cháy, Bánh tráng mắm", expanded=False):
@@ -356,7 +356,7 @@ if menu == "📥 Nhập đơn hàng":
                 filtered_data = {k: v for k, v in row_data.items() if str(v).strip() not in ["", "None", "nan"]}
                 amount = int(filtered_data['TỔNG TIỀNCẦN TRẢ(1)+(2)'].replace('.', ''))
                 ten_tnv_ban = convert_name(filtered_data['TÊN TNV BÁN'])
-                ndck = f"Oliu {str(stt_don_hang_moi)} {ten_tnv_ban}"
+                ndck = f"BANHANGF17 DON{str(stt_don_hang_moi)} {ten_tnv_ban}"
 
                 with st.expander("QR Thanh toán", expanded=True):
                     st.markdown(f"**📢 Vui lòng kiểm tra kĩ thông tin chuyển khoản trước khi chuyển tiền**")
@@ -495,7 +495,7 @@ elif menu == "📄 Xem dữ liệu":
                 if create_qr:
                     amount = int(filtered_data['TỔNG TIỀNCẦN TRẢ(1)+(2)'].replace('.', ''))
                     ten_tnv_ban = convert_name(filtered_data['TÊN TNV BÁN'])
-                    ndck = f"Oliu {str(stt_input)} {ten_tnv_ban}"
+                    ndck = f"BANHANGF17 DON{str(stt_input)} {ten_tnv_ban}"
                     show_qr_thanh_toan(amount, ndck)
                 
                 df_khach_hang = pd.DataFrame(list(thong_tin_dat_hang.items()), columns=["Thông tin", "Giá trị"])

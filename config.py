@@ -57,8 +57,8 @@ TARGET_SALES = 200_000_000
 SCOPE=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
 
-STK = "TINHNGUYENOLIU"
-TEN_CHU_TK = "NGUYEN THI NGOC TRAM"
+STK = "2845"
+TEN_CHU_TK = "PHAM THI CAM TU"
 BIN_BANK = "970422"
 
 MEO_HTML = """
