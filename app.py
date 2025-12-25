@@ -286,12 +286,12 @@ if menu == "📥 Nhập đơn hàng":
                 mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, step=1)
                 ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, step=1)
                 ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, step=1)
-                km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, step=1, disabled=True)
+                km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, step=1)
             with col2:
                 thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, step=1)
                 ktrb_500g = st.number_input("🥔 Khoai tây rong biển 500g", min_value=0, step=1)
                 ktmam_500g = st.number_input("🥔 Khoai tây mắm 500g", min_value=0, step=1)
-                km_trung_cua_500g = st.number_input("🍠 Khoai môn trứng cua 500g", min_value=0, step=1, disabled=True)
+                km_trung_cua_500g = st.number_input("🍠 Khoai môn trứng cua 500g", min_value=0, step=1)
                 chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, step=1)
         
         with st.expander("🍚 Cơm cháy, Bánh tráng mắm", expanded=False):
