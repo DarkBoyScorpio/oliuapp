@@ -285,7 +285,7 @@ if menu == "📥 Nhập đơn hàng":
             with col1:
                 mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, step=1)
                 ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, step=1)
-                ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, step=1)
+                ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, step=1, disabled=True)
                 km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, step=1)
             with col2:
                 thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, step=1)
@@ -302,7 +302,7 @@ if menu == "📥 Nhập đơn hàng":
                 banh_trang_mam = st.number_input("🥖 Bánh tráng mắm", min_value=0, step=1)
             with col2:
                 nep_chay_5 = st.number_input("🍙 Nếp cháy chà bông x5", min_value=0, step=1)
-                gao_lut_rb_200g = st.number_input("🌾 Gạo lứt rong biển 200g", min_value=0, step=1)
+                gao_lut_rb_200g = st.number_input("🌾 Gạo lứt rong biển 200g", min_value=0, step=1, disabled=True)
             
         submitted = st.form_submit_button("🚀 Xác nhận & Gửi đơn", type="primary")
 
