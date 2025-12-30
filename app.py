@@ -273,7 +273,7 @@ if menu == "📥 Nhập đơn hàng":
             with col1:
                 mat_ong_500ml = st.number_input("🍯 Mật ong 500ml", min_value=0, step=1)
                 dieu_muoi_200g = st.number_input("🥜 Điều muối 200g", min_value=0, step=1)
-                dieu_mam_ot_500g = st.number_input("🌶️ Điều mắm ớt 500g", min_value=0, step=1)
+                dieu_mam_ot_500g = st.number_input("🌶️ Điều mắm ớt 500g", min_value=0, step=1, disabled=True)
             with col2:
                 mat_ong_1l = st.number_input("🍯 Mật ong 1 lít", min_value=0, step=1)
                 dieu_muoi_500g = st.number_input("🥜 Điều muối 500g", min_value=0, step=1)
@@ -283,12 +283,12 @@ if menu == "📥 Nhập đơn hàng":
         with st.expander("🍱 Rau củ quả - trái cây sấy", expanded=False):
             col1, col2 = st.columns(2)
             with col1:
-                mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, step=1)
+                mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, step=1, disabled=True)
                 ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, step=1)
                 ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, step=1, disabled=True)
                 km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, step=1)
             with col2:
-                thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, step=1)
+                thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, step=1, disabled=True)
                 ktrb_500g = st.number_input("🥔 Khoai tây rong biển 500g", min_value=0, step=1)
                 ktmam_500g = st.number_input("🥔 Khoai tây mắm 500g", min_value=0, step=1)
                 km_trung_cua_500g = st.number_input("🍠 Khoai môn trứng cua 500g", min_value=0, step=1)
