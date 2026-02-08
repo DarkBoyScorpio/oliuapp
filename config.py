@@ -62,84 +62,162 @@ TEN_CHU_TK = "PHAM THI CAM TU"
 BIN_BANK = "970422"
 
 MEO_HTML = """
-            <!-- Mèo chạy -->
-            <div id="neko-container" style="position: fixed; bottom: 0; left: 0; font-size: 35px; z-index: 9999;">
-              <div id="hover-text" style="
-                display: none;
-                font-size: 12px;
-                color: white;
-                background: rgba(0, 0, 0, 0.6);
-                padding: 4px 10px;
-                border-radius: 15px;
-                margin-bottom: 2px;
-                text-align: center;
-                width: max-content;
-                max-width: 150px;
-                position: relative;
-                left: 50%;
-                transform: translateX(-50%);
-                box-shadow: 0 0 6px rgba(0,0,0,0.4);
-              ">
-                Xê raaaaaaa
-              </div>
-              <div id="neko">🐈</div>
-            </div>
+<!-- Mèo chạy trước -->
+<div id="neko-container" style="position: fixed; bottom: 0; left: 0; font-size: 35px; z-index: 9999;">
+  <div id="hover-text" style="
+    display: none;
+    font-size: 12px;
+    color: white;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 4px 10px;
+    border-radius: 15px;
+    margin-bottom: 2px;
+    text-align: center;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  ">
+    Xê raaaaaaa
+  </div>
+  <div id="neko">🐈</div>
+</div>
 
-            <!-- 💨 Xì hơi -->
-            <div id="trail" style="position: fixed; bottom: 0; left: 0; font-size: 30px; display: none; z-index: 9998;">
-              💨
-            </div>
+<!-- Chó chạy sau -->
+<div id="dog-container" style="position: fixed; bottom: 0; left: 0; font-size: 35px; z-index: 9998;">
+  <div id="dog-hover-text" style="
+    display: none;
+    font-size: 12px;
+    color: white;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 4px 10px;
+    border-radius: 15px;
+    margin-bottom: 2px;
+    text-align: center;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  ">
+    Gâu gâu!
+  </div>
+  <div id="dog">🐕</div>
+</div>
 
-            <script>
-            let nekoContainer = document.getElementById("neko-container");
-            let neko = document.getElementById("neko");
-            let hoverText = document.getElementById("hover-text");
-            let trail = document.getElementById("trail");
+<!-- 💨 Xì hơi mèo -->
+<div id="cat-trail" style="position: fixed; bottom: 0; left: 0; font-size: 30px; display: none; z-index: 9996;">
+  💨
+</div>
 
-            let pos = window.innerWidth;
-            let speed = 1.5;
-            let boosted = false;
+<script>
+let nekoContainer = document.getElementById("neko-container");
+let neko = document.getElementById("neko");
+let hoverText = document.getElementById("hover-text");
 
-            // Di chuyển mèo
-            function moveCat() {
-              pos -= speed;
-              if (pos < -50) {
-                pos = window.innerWidth + 50;
-              }
-              nekoContainer.style.left = pos + "px";
+let dogContainer = document.getElementById("dog-container");
+let dog = document.getElementById("dog");
+let dogHoverText = document.getElementById("dog-hover-text");
+let catTrail = document.getElementById("cat-trail");
 
-              if (boosted && speed > 1.5) {
-                speed -= 0.05;
-                if (speed <= 1.5) {
-                  speed = 1.5;
-                  boosted = false;
-                }
-              }
+// mèo trước, chó sau
+let catPos = window.innerWidth;
+let dogPos = catPos + 140;
 
-              requestAnimationFrame(moveCat);
-            }
-            moveCat();
+let catSpeed = 2.3;
+let baseDogSpeed = 3.2;
+let dogSpeed = baseDogSpeed;
 
-            // 💨 xì hơi định kỳ
-            setInterval(() => {
-              trail.style.left = (pos + 40) + "px";
-              trail.style.display = "block";
-              setTimeout(() => {
-                trail.style.display = "none";
-              }, 400);
+let dogOffset = 0;
+let fartCooldown = false;
 
-              speed = 4;
-              boosted = true;
-            }, 2000);
+function catFart() {
+  if (fartCooldown) return;
 
-            // Hover: hiện thinking + đổi mèo tím
-            nekoContainer.addEventListener("mouseover", () => {
-              hoverText.style.display = "block";
-              neko.innerText = "🐈‍⬛";
-            });
-            nekoContainer.addEventListener("mouseout", () => {
-              hoverText.style.display = "none";
-              neko.innerText = "🐈";
-            });
-            </script>
-            """
+  fartCooldown = true;
+
+  // khói
+  catTrail.style.left = (catPos + 15) + "px";
+  catTrail.style.display = "block";
+
+  // chó té ngửa
+  dogContainer.style.transform = "rotate(90deg)";
+  dogOffset = 80;
+
+  setTimeout(() => {
+    catTrail.style.display = "none";
+    dogContainer.style.transform = "rotate(0deg)";
+    fartCooldown = false;
+  }, 600);
+}
+
+function moveAnimals() {
+  catPos -= catSpeed;
+
+  // chó đuổi mèo
+  if (!fartCooldown) {
+    dogPos -= dogSpeed;
+  }
+
+  // chó bị đẩy lùi
+  if (dogOffset > 0) {
+    dogOffset -= 0.8;
+    if (dogOffset < 0) dogOffset = 0;
+  }
+
+  // khoảng cách
+  let distance = dogPos - catPos;
+
+  // nếu chó tới gần → mèo xì hơi
+  if (distance < 80 && !fartCooldown) {
+    catFart();
+  }
+
+  // reset khi ra khỏi màn hình
+  if (catPos < -60) {
+    catPos = window.innerWidth + 40;
+    dogPos = catPos + 140;
+  }
+
+  nekoContainer.style.left = catPos + "px";
+  dogContainer.style.left = (dogPos + dogOffset) + "px";
+
+  requestAnimationFrame(moveAnimals);
+}
+moveAnimals();
+
+// Hover mèo: hiện chữ + đổi mèo tím + chó chạy chậm
+nekoContainer.addEventListener("mouseover", () => {
+  hoverText.style.display = "block";
+  neko.innerText = "🐈‍⬛";
+  dogSpeed = 1.0; // chạy chậm
+});
+nekoContainer.addEventListener("mouseout", () => {
+  hoverText.style.display = "none";
+  neko.innerText = "🐈";
+  dogSpeed = baseDogSpeed; // về tốc độ bình thường
+});
+
+// Click mèo → xì hơi ngay
+nekoContainer.addEventListener("click", () => {
+  catFart();
+});
+
+// Hover chó
+dogContainer.addEventListener("mouseover", () => {
+  dogHoverText.style.display = "block";
+  dog.innerText = "🐕‍🦺";
+});
+dogContainer.addEventListener("mouseout", () => {
+  dogHoverText.style.display = "none";
+  dog.innerText = "🐕";
+});
+
+// Double click chó → tăng tốc
+dogContainer.addEventListener("click", () => {
+  dogSpeed = 4.5;
+  setTimeout(() => {
+    dogSpeed = baseDogSpeed;
+  }, 2000);
+});
+</script>
+
+"""
+
