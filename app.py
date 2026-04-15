@@ -268,7 +268,7 @@ if menu == "📥 Nhập đơn hàng":
             with col1:
                 mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, step=1, disabled=is_disabled("MÍT 500G"))
                 thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, step=1, disabled=is_disabled("THẬP CẨM 500G"))
-                chuoi_me_duong_500g = st.number_input("🍌 Chuối sấy mè đường 500g", min_value=0, step=1)
+                chuoi_me_duong_500g = st.number_input("🍌 Chuối sấy mè đường 500g", min_value=0, step=1, disabled=is_disabled("CHUỐI SẤY MÈ ĐƯỜNG 500G"))
                 chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, step=1, disabled=is_disabled("CHUỐI SẤY MỘC 500G"))
             with col2:
                 ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, step=1, disabled=is_disabled("KHOAI TÂY RONG BIỂN 250G"))
