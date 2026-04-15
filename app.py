@@ -590,7 +590,7 @@ elif menu == "🖨️ In đơn hàng":
     with col1:
         with st.form("form_chua_soan"):
             st.write(f"STT các đơn chưa soạn: {', '.join(map(str, chua_soan_don))}")
-            submitted = st.form_submit_button("In tất cả đơn chưa soạn")
+            submitted = st.form_submit_button("In tất cả đơn chưa soạn", type="primary")
             
             if submitted:
                 df_filtered = df[
@@ -653,10 +653,10 @@ elif menu == "🖨️ In đơn hàng":
     with col2:
         with st.form("form_stt"):
             selected_stt = st.multiselect(
-                "🔢 Chọn nhiều STT để in hàng loạt",
+                "🔢 Chọn nhiều STT để in",
                 options=list_stt, accept_new_options=False
             )
-            submitted = st.form_submit_button("Xác nhận")
+            submitted = st.form_submit_button("In đơn")
         if submitted:
             df_filtered = df[df["STT"].isin(selected_stt)]
             
