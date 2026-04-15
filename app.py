@@ -1,7 +1,7 @@
 import pandas as pd
 import altair as alt
 import streamlit as st
-import os, json, base64, requests, gspread
+import os, json, base64, requests, gspread, math
 import streamlit.components.v1 as components
 from oauth2client.service_account import ServiceAccountCredentials
 from config import (
@@ -53,6 +53,8 @@ stock = get_stock(headers_ton=headers_ton, values_ton=values_ton)
 def is_disabled(product_name: str) -> bool:
     return stock.get(normalize_key(product_name), 0) <= 0
 
+def get_max_stock(product_name: str) -> int:
+    return stock.get(normalize_key(product_name), 0)
 
 def custom_progress_bar(ratio):
     percent = int(min(ratio, 1.0) * 100)
@@ -254,36 +256,36 @@ if menu == "📥 Nhập đơn hàng":
         with st.expander("🍯 Mật ong, Mắm, Điều", expanded=False):
             col1, col2 = st.columns(2)
             with col1:
-                mat_ong_500ml = st.number_input("🍯 Mật ong 500ml", min_value=0, step=1, disabled=is_disabled("MẬT ONG 500ML"))
-                dieu_muoi_200g = st.number_input("🥜 Điều muối 200g", min_value=0, step=1, disabled=is_disabled("ĐIỀU RANG MUỐI 200G"))
-                dieu_mam_ot_500g = st.number_input("🌶️ Điều mắm ớt 500g", min_value=0, step=1, disabled=is_disabled("ĐIỀU MẮM ỚT 500G"))
+                mat_ong_500ml = st.number_input("🍯 Mật ong 500ml", min_value=0, max_value=get_max_stock("MẬT ONG 500ML"), step=1, disabled=is_disabled("MẬT ONG 500ML"))
+                dieu_muoi_200g = st.number_input("🥜 Điều muối 200g", min_value=0, max_value=get_max_stock("ĐIỀU RANG MUỐI 200G"), step=1, disabled=is_disabled("ĐIỀU RANG MUỐI 200G"))
+                dieu_mam_ot_500g = st.number_input("🌶️ Điều mắm ớt 500g", min_value=0, max_value=get_max_stock("ĐIỀU MẮM ỚT 500G"), step=1, disabled=is_disabled("ĐIỀU MẮM ỚT 500G"))
             with col2:
-                mat_ong_1l = st.number_input("🍯 Mật ong 1 lít", min_value=0, step=1, disabled=is_disabled("MẬT ONG 1 LÍT"))
-                dieu_muoi_500g = st.number_input("🥜 Điều muối 500g", min_value=0, step=1, disabled=is_disabled("ĐIỀU RANG MUỐI 500G"))
-                mam_1l = st.number_input("🥫 Mắm 1 lít", min_value=0, step=1, disabled=is_disabled("MẮM 1 LÍT"))
+                mat_ong_1l = st.number_input("🍯 Mật ong 1 lít", min_value=0, max_value=get_max_stock("MẬT ONG 1 LÍT"), step=1, disabled=is_disabled("MẬT ONG 1 LÍT"))
+                dieu_muoi_500g = st.number_input("🥜 Điều muối 500g", min_value=0, max_value=get_max_stock("ĐIỀU RANG MUỐI 500G"), step=1, disabled=is_disabled("ĐIỀU RANG MUỐI 500G"))
+                mam_1l = st.number_input("🥫 Mắm 1 lít", min_value=0, max_value=get_max_stock("MẮM 1 LÍT"), step=1, disabled=is_disabled("MẮM 1 LÍT"))
 
         # ==== PHẦN 3: Snack - Mít, Chuối, Khoai, Gạo ====
         with st.expander("🍱 Rau củ quả - trái cây sấy", expanded=False):
             col1, col2 = st.columns(2)
             with col1:
-                mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, step=1, disabled=is_disabled("MÍT 500G"))
-                thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, step=1, disabled=is_disabled("THẬP CẨM 500G"))
-                chuoi_me_duong_500g = st.number_input("🍌 Chuối sấy mè đường 500g", min_value=0, step=1, disabled=is_disabled("CHUỐI SẤY MÈ ĐƯỜNG 500G"))
-                chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, step=1, disabled=is_disabled("CHUỐI SẤY MỘC 500G"))
+                mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, max_value=get_max_stock("MÍT 500G"), step=1, disabled=is_disabled("MÍT 500G"))
+                thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, max_value=get_max_stock("THẬP CẨM 500G"), step=1, disabled=is_disabled("THẬP CẨM 500G"))
+                chuoi_me_duong_500g = st.number_input("🍌 Chuối sấy mè đường 500g", min_value=0, max_value=get_max_stock("CHUỐI SẤY MÈ ĐƯỜNG 500G"), step=1, disabled=is_disabled("CHUỐI SẤY MÈ ĐƯỜNG 500G"))
+                chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, max_value=get_max_stock("CHUỐI SẤY MỘC 500G"), step=1, disabled=is_disabled("CHUỐI SẤY MỘC 500G"))
             with col2:
-                ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, step=1, disabled=is_disabled("KHOAI TÂY RONG BIỂN 250G"))
-                ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, step=1, disabled=is_disabled("KHOAI TÂY MẮM 250G"))
-                km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, step=1, disabled=is_disabled("KHOAI MÔN TRỨNG CUA 250G"))
+                ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, max_value=get_max_stock("KHOAI TÂY RONG BIỂN 250G"), step=1, disabled=is_disabled("KHOAI TÂY RONG BIỂN 250G"))
+                ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, max_value=get_max_stock("KHOAI TÂY MẮM 250G"), step=1, disabled=is_disabled("KHOAI TÂY MẮM 250G"))
+                km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, max_value=get_max_stock("KHOAI MÔN TRỨNG CUA 250G"), step=1, disabled=is_disabled("KHOAI MÔN TRỨNG CUA 250G"))
 
         with st.expander("🍚 Cơm cháy, Bánh tráng mắm", expanded=False):
             col1, col2 = st.columns(2)
             with col1:
-                nep_chay_3 = st.number_input("🍙 Nếp cháy chà bông x3", min_value=0, step=1, disabled=is_disabled("NẾP CHÁY CHÀ BÔNG 150G"))
-                com_chay_200g = st.number_input("🍚 Cơm cháy chà bông 200g", min_value=0, step=1, disabled=is_disabled("CƠM CHÁY CHÀ BÔNG 200G"))
-                banh_trang_mam = st.number_input("🥖 Bánh tráng mắm", min_value=0, step=1, disabled=is_disabled("BÁNH TRÁNG MẮM"))
+                nep_chay_3 = st.number_input("🍙 Nếp cháy chà bông x3", min_value=0, max_value=math.floor(get_max_stock("NẾP CHÁY CHÀ BÔNG 150G")/3), step=1, disabled=is_disabled("NẾP CHÁY CHÀ BÔNG 150G"))
+                com_chay_200g = st.number_input("🍚 Cơm cháy chà bông 200g", min_value=0, max_value=get_max_stock("CƠM CHÁY CHÀ BÔNG 200G"), step=1, disabled=is_disabled("CƠM CHÁY CHÀ BÔNG 200G"))
+                banh_trang_mam = st.number_input("🥖 Bánh tráng mắm", min_value=0, max_value=get_max_stock("BÁNH TRÁNG MẮM"), step=1, disabled=is_disabled("BÁNH TRÁNG MẮM"))
             with col2:
-                nep_chay_5 = st.number_input("🍙 Nếp cháy chà bông x5", min_value=0, step=1, disabled=is_disabled("NẾP CHÁY CHÀ BÔNG 150G"))
-                gao_lut_rb_200g = st.number_input("🌾 Gạo lứt rong biển 200g", min_value=0, step=1, disabled=is_disabled("GẠO LỨT RONG BIỂN 200G"))
+                nep_chay_5 = st.number_input("🍙 Nếp cháy chà bông x5", min_value=0, max_value=math.floor(get_max_stock("NẾP CHÁY CHÀ BÔNG 150G")/5), step=1, disabled=is_disabled("NẾP CHÁY CHÀ BÔNG 150G"))
+                gao_lut_rb_200g = st.number_input("🌾 Gạo lứt rong biển 200g", min_value=0, max_value=get_max_stock("GẠO LỨT RONG BIỂN 200G"), step=1, disabled=is_disabled("GẠO LỨT RONG BIỂN 200G"))
             
         submitted = st.form_submit_button("🚀 Xác nhận & Gửi đơn", type="primary")
 
