@@ -1,130 +1,80 @@
-import os, json, base64, unicodedata
 import pandas as pd
 import altair as alt
-import requests
 import streamlit as st
+import os, json, base64, requests, gspread
 import streamlit.components.v1 as components
-import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from dotenv import load_dotenv
 from config import (
-                    gia_mat_hang, product_column_map, thoi_gian_nhan_hang, 
-                    TARGET_SALES, SCOPE, STK, TEN_CHU_TK, BIN_BANK, MEO_HTML
+                    product_column_map, thoi_gian_nhan_hang, 
+                    TARGET_SALES, SCOPE, STK, TEN_CHU_TK, BIN_BANK, 
+                    MEO_HTML, PROGRESS_BAR_HTML, PRINT_HTML, NOTE_HTML,
+                    TIEU_DE_HTML, GIOI_THIEU_HTML, SOCIAL_HTML, SLIDER_HTML_TEMPLATE,
+                    GIA_ROW_VALUE, GIA_ROW_NAME, GIA_ROW_START, GIA_ROW_END, 
+                    SHEET_HANG_TON_NAME, HANG_TON_NAME_START, HANG_TON_NAME_END, HANG_TON_VALUE_START, HANG_TON_VALUE_END,
+                    TIEN_BAN_HANG, MENU_TREE, MIT_500G, THAP_CAM_500G, CHUOI_SAY_ME_DUONG_500G, CHUOI_SAY_MOC_500G, KHOAI_TAY_RONG_BIEN_250G, KHOAI_TAY_MAM_250G,
+                    KHOAI_MON_TRUNG_CUA_250G, NEP_CHAY_CHA_BONG_150G_X3, NEP_CHAY_CHA_BONG_150G_X5, COM_CHAY_CHA_BONG_200G, 
+                    GAO_LUT_RONG_BIEN_200G, BANH_TRANG_MAM, MAT_ONG_500ML, MAT_ONG_1_LIT, MAM_1_LIT, DIEU_RANG_MUOI_200G, DIEU_RANG_MUOI_500G, DIEU_MAM_OT_500G,
+
                 )
-
-load_dotenv()
-
-def get_secret(key):
-    return st.secrets.get(key) or os.getenv(key)
+from util import (
+                    get_gia_hang, get_secret, get_stock,
+                    normalize_key, clean_money_column, convert_name
+                )
 
 SHARE_URL = get_secret("SHARE_URL")
 GSP_CRED = get_secret("GSP_CRED")
 
-json_creds = json.loads(base64.b64decode(GSP_CRED).decode("utf-8"))
-
 st.set_page_config(
-    page_title="ÔLiu F17 - Bán hàng",
+    page_title="ÔLiu F18 - Bán hàng",
     page_icon="./oliu.jpg",                
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+menu = st.sidebar.radio("📋 Menu", MENU_TREE)
 
-menu = st.sidebar.radio("📋 Menu", ["📥 Nhập đơn hàng", "📄 Xem dữ liệu", "📊 Thống kê", "👉 Về chúng tôi"])
-
-creds = ServiceAccountCredentials.from_json_keyfile_dict(json_creds, SCOPE)
+creds = ServiceAccountCredentials.from_json_keyfile_dict(
+            json.loads(base64.b64decode(GSP_CRED).decode("utf-8")), SCOPE
+        )
 client = gspread.authorize(creds)
 sheet = client.open_by_url(SHARE_URL).sheet1
 
-# ===== GET WORKSHEET =====
-worksheetton = client.open_by_url(SHARE_URL).worksheet("Quản lí tồn")
+gia_mat_hang = get_gia_hang(sheet.get_all_values(), row_value = GIA_ROW_VALUE, row_name = GIA_ROW_NAME, row_start = GIA_ROW_START, row_end = GIA_ROW_END)
+
+# ===== GET HANG TON WORKSHEET =====
+worksheetton = client.open_by_url(SHARE_URL).worksheet(SHEET_HANG_TON_NAME)
 
 # ===== READ HEADER & VALUE =====
-headers_raw = worksheetton.get("B3:B21")
-values_raw  = worksheetton.get("R3:R21")
-
-headers = [h[0] for h in headers_raw]
-values  = [v[0] if v else None for v in values_raw]
-
-raw_ton_kho = dict(zip(headers, values))
-
-# ===== NORMALIZE =====
-def normalize_key(text: str) -> str:
-    return text.replace("\n", "").strip().upper()
-
-def parse_value(val) -> int:
-    try:
-        return int(val)
-    except (TypeError, ValueError):
-        return 0
-
-
-# ===== STOCK DICT =====
-stock = {
-    normalize_key(k): parse_value(v)
-    for k, v in raw_ton_kho.items()
-}
+headers_ton = worksheetton.get(f"{HANG_TON_NAME_START}:{HANG_TON_NAME_END}")
+values_ton  = worksheetton.get(f"{HANG_TON_VALUE_START}:{HANG_TON_VALUE_END}")
+stock = get_stock(headers_ton=headers_ton, values_ton=values_ton)
 
 # ===== CHECK DISABLED =====
 def is_disabled(product_name: str) -> bool:
     return stock.get(normalize_key(product_name), 0) <= 0
 
 
-def clean_money_column(series):
-    return (
-        series.astype(str)
-        .str.replace(r"[^\d]", "", regex=True)  # Xoá ký tự không phải số
-        .replace("", "0")                       # Thay thế chuỗi rỗng bằng "0"
-        .astype(float)
-    )
-
-def convert_name(text: str):
-    text = unicodedata.normalize('NFD', text)
-    text = ''.join(c for c in text if unicodedata.category(c) != 'Mn')
-    return ' '.join(text.lower().strip().split())
-
 def custom_progress_bar(ratio):
     percent = int(min(ratio, 1.0) * 100)
+    progress_bar_html = PROGRESS_BAR_HTML.format(percent=percent)
+    st.markdown(progress_bar_html, unsafe_allow_html=True)
 
-    st.markdown(f"""
-    <div style="position: relative; background-color: #e0e0e0; height: 24px; border-radius: 12px; overflow: hidden; margin-top: 10px; margin-bottom: 10px;">
-        <div style="
-            width: {percent}%;
-            background-color: #4B8BBE;
-            height: 100%;
-            transition: width 0.5s;
-        "></div>
-        <div style="
-            position: absolute;
-            top: 0;
-            left: calc({percent}% - 20px);
-            height: 100%;
-            width: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        ">
-            🚀
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
 
 def show_dashboard():
-    st.title("📊 Xem qua KPI nào")
+    st.title("📊 Số gì ra, mấy gì ra...")
 
     # Đọc dữ liệu từ Google Sheet (hoặc cache lại để không load nhiều)
     data = sheet.get_all_values()
-    df = pd.DataFrame(data[5:], columns=data[4])
+    df = pd.DataFrame(data[GIA_ROW_NAME+1:], columns=data[GIA_ROW_NAME])
     df.columns = df.columns.str.replace('\n', '', regex=True)
 
-    df["TIỀN BÁN HÀNG (2)"] = clean_money_column(df["TIỀN BÁN HÀNG (2)"])
+    df[TIEN_BAN_HANG] = clean_money_column(df[TIEN_BAN_HANG])
     df["TÊN TNV BÁN"] = df["TÊN TNV BÁN"].fillna("Chưa xác định")
 
     ### 🥇 1. Top TNV bán hàng
     with st.container():
         st.markdown("### 🎯 Tổng doanh số và mục tiêu")
-        total_sales = df["TIỀN BÁN HÀNG (2)"].sum()
+        total_sales = df[TIEN_BAN_HANG].sum()
         delta = total_sales - TARGET_SALES
         ratio = total_sales / TARGET_SALES
 
@@ -139,11 +89,11 @@ def show_dashboard():
             )
 
             if ratio >= 1:
-                st.success("🎉 Đã vượt mục tiêu! Tuyệt vời! 🚀")
-            elif ratio >= 0.8:
-                st.warning("⚠️ Sắp đạt mục tiêu, cố lên! 💪")
+                st.success("🎉 Về bờ rồi! 🚀")
+            elif ratio >= 0.5:
+                st.warning("📈 Đứng ở dưới sale mạnh lên 🔥")
             else:
-                st.info("📈 Tiếp tục phấn đấu để đạt mục tiêu nhé!")
+                st.info("⚠️ Flop quá 😭")
 
         with col2:
             custom_progress_bar(ratio)
@@ -157,9 +107,9 @@ def show_dashboard():
         st.markdown("### 🏆 Đại lộ danh vọng")
 
         top_tnv = (
-            df.groupby("TÊN TNV BÁN")["TIỀN BÁN HÀNG (2)"]
+            df.groupby("TÊN TNV BÁN")[TIEN_BAN_HANG]
             .sum().reset_index()
-            .rename(columns={"TIỀN BÁN HÀNG (2)": "TIỀN BÁN HÀNG"})
+            .rename(columns={TIEN_BAN_HANG: "TIỀN BÁN HÀNG"})
             .sort_values(by="TIỀN BÁN HÀNG", ascending=False)
             .head(10)
         )
@@ -194,7 +144,7 @@ def show_dashboard():
             
     with st.container():
         st.markdown("### 💵 Doanh thu theo mặt hàng")
-        product_columns = df.columns[14:33]
+        product_columns = df.columns[GIA_ROW_START:GIA_ROW_END]
         product_data = df[product_columns].apply(pd.to_numeric, errors="coerce").fillna(0)
         mat_hang_so_luong = product_data.sum().to_dict()
 
@@ -237,7 +187,7 @@ def show_dashboard():
 
                 st.altair_chart(chart_revenue, use_container_width=True)
         else:
-            st.warning("⚠️ Chưa có mặt hàng nào để tính doanh thu.")
+            st.warning("⚠️ Chưa có đồng nào.")
 
 
 ### main code ###
@@ -267,8 +217,8 @@ def show_qr_thanh_toan(amount: int, ndck: str):
             "addInfo": ndck,
             "template": "compact2"
         })
-        data = res.json()
-        qr_url = data['data']['qrDataURL']
+        data_qr = res.json()
+        qr_url = data_qr['data']['qrDataURL']
         st.markdown(
             f"""
             <div style='text-align:center;'>
@@ -317,16 +267,14 @@ if menu == "📥 Nhập đơn hàng":
             col1, col2 = st.columns(2)
             with col1:
                 mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, step=1, disabled=is_disabled("MÍT 500G"))
+                thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, step=1, disabled=is_disabled("THẬP CẨM 500G"))
+                chuoi_me_duong_500g = st.number_input("🍌 Chuối sấy mè đường 500g", min_value=0, step=1)
+                chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, step=1, disabled=is_disabled("CHUỐI SẤY MỘC 500G"))
+            with col2:
                 ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, step=1, disabled=is_disabled("KHOAI TÂY RONG BIỂN 250G"))
                 ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, step=1, disabled=is_disabled("KHOAI TÂY MẮM 250G"))
                 km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, step=1, disabled=is_disabled("KHOAI MÔN TRỨNG CUA 250G"))
-            with col2:
-                thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, step=1, disabled=is_disabled("THẬP CẨM 500G"))
-                ktrb_500g = st.number_input("🥔 Khoai tây rong biển 500g", min_value=0, step=1, disabled=is_disabled("KHOAI TÂY RONG BIỂN 500G"))
-                ktmam_500g = st.number_input("🥔 Khoai tây mắm 500g", min_value=0, step=1, disabled=is_disabled("KHOAI TÂY MẮM 500G"))
-                km_trung_cua_500g = st.number_input("🍠 Khoai môn trứng cua 500g", min_value=0, step=1, disabled=is_disabled("KHOAI MÔN TRỨNG CUA 500G"))
-                chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, step=1, disabled=is_disabled("CHUỐI SẤY MỘC 500G"))
-        
+
         with st.expander("🍚 Cơm cháy, Bánh tráng mắm", expanded=False):
             col1, col2 = st.columns(2)
             with col1:
@@ -361,7 +309,7 @@ if menu == "📥 Nhập đơn hàng":
                 first_empty_row = len(column_values) + 1
                 stt_last_row = sheet.row_values(first_empty_row - 1)[0]
                 row[0] = int(stt_last_row) + 1
-                for col_idx in range(1, 42):
+                for col_idx in range(1, 39):
                     try:
                         value = row[col_idx-1]
                         if value == "":
@@ -381,7 +329,7 @@ if menu == "📥 Nhập đơn hàng":
             if st.button("💳 Bấm vào đây để tạo mã QR thanh toán", type="primary"):
                 stt_don_hang_moi = st.session_state["don_hang_moi"]
                 data = sheet.get_all_values()
-                df = pd.DataFrame(data[5:], columns=data[4])
+                df = pd.DataFrame(data[GIA_ROW_NAME+1:], columns=data[GIA_ROW_NAME])
                 df.columns = df.columns.str.replace('\n', '', regex=True)
                 df = df.loc[:, ~df.columns.duplicated()]
                 df_filtered = df[df["STT"] == str(stt_don_hang_moi)]
@@ -389,7 +337,7 @@ if menu == "📥 Nhập đơn hàng":
                 filtered_data = {k: v for k, v in row_data.items() if str(v).strip() not in ["", "None", "nan"]}
                 amount = int(filtered_data['TỔNG TIỀNCẦN TRẢ(1)+(2)'].replace('.', ''))
                 ten_tnv_ban = convert_name(filtered_data['TÊN TNV BÁN'])
-                ndck = f"BANHANGF17 DON{str(stt_don_hang_moi)} {ten_tnv_ban}"
+                ndck = f"BANHANGF18 DON{str(stt_don_hang_moi)} {ten_tnv_ban}"
 
                 with st.expander("QR Thanh toán", expanded=True):
                     st.markdown(f"**📢 Vui lòng kiểm tra kĩ thông tin chuyển khoản trước khi chuyển tiền**")
@@ -406,8 +354,8 @@ if menu == "📥 Nhập đơn hàng":
                         "addInfo": ndck,
                         "template": "compact2"
                     })
-                    data = res.json()
-                    qr_url = data['data']['qrDataURL']
+                    data_qr = res.json()
+                    qr_url = data_qr['data']['qrDataURL']
                     st.markdown(
                         f"""
                         <div style='text-align:center;'>
@@ -439,32 +387,30 @@ if menu == "📥 Nhập đơn hàng":
 
             # 📦 Mặt hàng (chỉ hiện nếu > 0)
             mat_hang = {
-                "Mít 500g": mit_500g,
-                "Thập cẩm 500g": thap_cam_500g,
-                "Chuối mộc 500g": chuoi_500g,           
-                "Khoai tây rong biển 250g": ktrb_250g,
-                "Khoai tây rong biển 500g": ktrb_500g,
-                "Khoai tây mắm 250g": ktmam_250g,
-                "Khoai tây mắm 500g": ktmam_500g,
-                "Khoai môn trứng cua 250g": km_trung_cua_250g,
-                "Khoai môn trứng cua 500g": km_trung_cua_500g,
-                "Nếp cháy chà bông x3": nep_chay_3,
-                "Nếp cháy chà bông x5": nep_chay_5,
-                "Cơm cháy chà bông 200g": com_chay_200g,
-                "Gạo lứt rong biển 200g": gao_lut_rb_200g,
-                "Bánh tráng mắm": banh_trang_mam,
-                "Mật ong 500ml": mat_ong_500ml,
-                "Mật ong 1 lít": mat_ong_1l,
-                "Mắm 1 lít": mam_1l,
-                "Điều rang muối 200g": dieu_muoi_200g,
-                "Điều rang muối 500g": dieu_muoi_500g,
-                "Điều mắm ớt 500g": dieu_mam_ot_500g
-            }
+                    MIT_500G: mit_500g,
+                    THAP_CAM_500G: thap_cam_500g,
+                    CHUOI_SAY_ME_DUONG_500G: chuoi_me_duong_500g,
+                    CHUOI_SAY_MOC_500G: chuoi_500g,
+                    KHOAI_TAY_RONG_BIEN_250G: ktrb_250g,
+                    KHOAI_TAY_MAM_250G: ktmam_250g,
+                    KHOAI_MON_TRUNG_CUA_250G: km_trung_cua_250g,
+                    NEP_CHAY_CHA_BONG_150G_X3: nep_chay_3,
+                    NEP_CHAY_CHA_BONG_150G_X5: nep_chay_5,
+                    COM_CHAY_CHA_BONG_200G: com_chay_200g,
+                    GAO_LUT_RONG_BIEN_200G: gao_lut_rb_200g,
+                    BANH_TRANG_MAM: banh_trang_mam,
+                    MAT_ONG_500ML: mat_ong_500ml,
+                    MAT_ONG_1_LIT: mat_ong_1l,
+                    MAM_1_LIT: mam_1l,
+                    DIEU_RANG_MUOI_200G: dieu_muoi_200g,
+                    DIEU_RANG_MUOI_500G: dieu_muoi_500g,
+                    DIEU_MAM_OT_500G: dieu_mam_ot_500g
+                }
 
             # 👉 Lọc các mặt hàng có số lượng > 0
             mat_hang_co_mua = {k: v for k, v in mat_hang.items() if v > 0}
 
-            row = [""] * 40
+            row = [""] * 38
 
             # Gán các thông tin khách hàng
             row[1] = ten_tnv
@@ -483,11 +429,11 @@ if menu == "📥 Nhập đơn hàng":
             show_data(tong_ket, mat_hang_co_mua, row)
 
 
-elif menu == "📄 Xem dữ liệu":
+elif menu == "📄 Tra cứu đơn hàng":
     components.html(MEO_HTML, height=80)
-    st.title("📄 Dữ liệu đơn hàng")
+    st.title("📄 Xem đơn hàng của bạn")
     data = sheet.get_all_values()
-    df = pd.DataFrame(data[5:], columns=data[4])
+    df = pd.DataFrame(data[GIA_ROW_NAME+1:], columns=data[GIA_ROW_NAME])
     df.columns = df.columns.str.replace('\n', '', regex=True)
     df = df.loc[:, ~df.columns.duplicated()]
 
@@ -528,71 +474,34 @@ elif menu == "📄 Xem dữ liệu":
                 if create_qr:
                     amount = int(filtered_data['TỔNG TIỀNCẦN TRẢ(1)+(2)'].replace('.', ''))
                     ten_tnv_ban = convert_name(filtered_data['TÊN TNV BÁN'])
-                    ndck = f"BANHANGF17 DON{str(stt_input)} {ten_tnv_ban}"
+                    ndck = f"BANHANGF18 DON{str(stt_input)} {ten_tnv_ban}"
                     show_qr_thanh_toan(amount, ndck)
                 
                 df_khach_hang = pd.DataFrame(list(thong_tin_dat_hang.items()), columns=["Thông tin", "Giá trị"])
+                df_khach_hang.loc[df_khach_hang["Thông tin"] == "CHI TIẾT ĐƠN (VUI LÒNG ĐIỀN CHÍNH XÁC VỚI Ô CỘT SỐ LƯỢNG BÊN PHẢI)", "Thông tin"] = "CHI TIẾT ĐƠN"
+                df_khach_hang.loc[df_khach_hang["Thông tin"] == "TỔNG TIỀNCẦN TRẢ(1)+(2)", "Thông tin"] = "TỔNG TIỀN CẦN TRẢ"
+                df_khach_hang.loc[df_khach_hang["Thông tin"] == TIEN_BAN_HANG, "Thông tin"] = "TIỀN HÀNG"
+                df_khach_hang.loc[df_khach_hang["Thông tin"] == "Đã thanh toán", "Thông tin"] = "ĐÃ THANH TOÁN"
+                df_khach_hang.loc[df_khach_hang["Thông tin"] == "ĐÃ GIAO TNV(TNV điền hoặc người giao điền)", "Thông tin"] = "ĐÃ GIAO TNV"
+                
+                df_khach_hang.loc[df_khach_hang["Thông tin"] == "TỔNG TIỀN CẦN TRẢ", "Giá trị"] = df_khach_hang.loc[
+                                                                                                df_khach_hang["Thông tin"] == "TỔNG TIỀN CẦN TRẢ", "Giá trị"
+                                                                                            ].map(lambda x: f"{int(x):,}".replace(",", "."))
+                df_khach_hang.loc[df_khach_hang["Thông tin"] == "TIỀN HÀNG", "Giá trị"] = df_khach_hang.loc[
+                                                                                df_khach_hang["Thông tin"] == "TIỀN HÀNG", "Giá trị"
+                                                                            ].map(lambda x: f"{int(x):,}".replace(",", "."))
+
                 df_mon_hang = pd.DataFrame(list(mon_hang_da_mua.items()), columns=["Sản phẩm", "Số lượng"])
                 
                 df_khach_hang_in = df_khach_hang[df_khach_hang["Thông tin"] != "Đã thanh toán"]
                 df_khach_hang_in = df_khach_hang_in[df_khach_hang_in["Thông tin"] != "ĐÃ SOẠN ĐƠN"]
                 df_khach_hang_in = df_khach_hang_in[df_khach_hang_in["Thông tin"] != "ĐÃ GIAO TNV(TNV điền hoặc người giao điền)"]
-
-                df_khach_hang_in.loc[df_khach_hang_in["Thông tin"] == "CHI TIẾT ĐƠN (VUI LÒNG ĐIỀN CHÍNH XÁC VỚI Ô CỘT SỐ LƯỢNG BÊN PHẢI)", "Thông tin"] = "CHI TIẾT ĐƠN"
-                df_khach_hang_in.loc[df_khach_hang_in["Thông tin"] == "TỔNG TIỀNCẦN TRẢ(1)+(2)", "Thông tin"] = "TỔNG TIỀN CẦN TRẢ"
-                df_khach_hang_in.loc[df_khach_hang_in["Thông tin"] == "TIỀN BÁN HÀNG (2)", "Thông tin"] = "TIỀN HÀNG"
-
+                
                 with col2:
-                    html_code = f"""
-
-                        <div id="print-area" style="display:none;">
-                            <h3>📌 Thông tin khách hàng</h3>
-                            {df_khach_hang_in.to_html(index=False, border=1)}
-
-                            <h3>🛒 Mặt hàng đã đặt</h3>
-                            {df_mon_hang.to_html(index=False, border=1)}
-                        </div>
-
-                        <button id="printBtn" style="
-                            background-color:#000000; 
-                            color:white; 
-                            padding:0.4rem 0.9rem; 
-                            border:none; 
-                            border-radius:0.5rem; 
-                            cursor:pointer; 
-                            margin-top:-6px; 
-                            vertical-align:middle;
-                            font-family: 'Source Sans Pro', sans-serif; 
-                            font-size:1rem; 
-                            font-weight:400;
-                            line-height:1.5;
-                        ">
-                            🖨️ In đơn hàng
-                        </button>
-
-                        <script>
-                        document.getElementById("printBtn").addEventListener("click", function() {{
-                            const printArea = document.getElementById("print-area");
-                            if (!printArea) {{
-                                alert("Không tìm thấy nội dung để in!");
-                                return;
-                            }}
-                            const printWindow = window.open('', '', 'width=800,height=600');
-                            printWindow.document.write('<html><head><title>In đơn hàng</title>');
-                            printWindow.document.write('<style>');
-                            printWindow.document.write('body{{font-family:Arial;padding:20px;}}');
-                            printWindow.document.write('table{{border-collapse:collapse;width:100%;margin-top:10px;}}');
-                            printWindow.document.write('th,td{{border:1px solid #ccc;padding:8px;text-align:left;}}');
-                            printWindow.document.write('</style></head><body>');
-                            printWindow.document.write(printArea.innerHTML);
-                            printWindow.document.write('</body></html>');
-                            printWindow.document.close();
-                            printWindow.focus();
-                            printWindow.print();
-                        }});
-                        </script>
-                        """
-
+                    html_code = PRINT_HTML.format(
+                        customer_table=df_khach_hang_in.to_html(index=False, border=1),
+                        order_table=df_mon_hang.to_html(index=False, border=1)
+                    )
                     components.html(html_code, height=80)
                 
                 # --- 4. Hiển thị bảng mặt hàng ---
@@ -605,97 +514,29 @@ elif menu == "📄 Xem dữ liệu":
                     st.info("Khách hàng chưa đặt mặt hàng nào.")
 
             show_data()
-    st.markdown(
-                """
-                <div style="text-align: center; font-size: 13px; color: gray;">
-                    Sheet đang hiển thị chỉ có quyền xem, không thể chỉnh sửa
-                </div>
-                """,
+
+    st.markdown(NOTE_HTML,
                 unsafe_allow_html=True
             )
     embed_url = SHARE_URL.replace("/edit", "/preview")
     components.iframe(embed_url, height=600, scrolling=True)
 
-elif menu == "📊 Thống kê":
+
+elif menu == "📊 Con số biết nói":
     components.html(MEO_HTML, height=80)
     show_dashboard()
 
 
 elif menu == "👉 Về chúng tôi":
-    st.markdown("""
-    <style>
-    .hero-title {
-        text-align: left;
-        color: #1E3A8A;
-        font-size: 3em;
-        font-weight: bold;
-        font-family: 'Montserrat', sans-serif;
-    }
-    .section-title {
-        font-size: 2em;
-        font-weight: 700;
-        margin: 40px 0 20px;
-        color: #002B5B;
-    }
-    </style>
-
-    <div class="hero-title">
-        <h1>Đội tình nguyện ÔLiu</h1>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(TIEU_DE_HTML, unsafe_allow_html=True)
 
 
     # --- ABOUT US ---
-    st.markdown("<div class='section-title'>📝 Giới thiệu</div>", unsafe_allow_html=True)
-    st.markdown("""
-    <style>
-    .about-container {
-        max-width: 1000px;
-        margin: 0;
-        padding: 20px 25px;
-        border-radius: 16px;
-        background: #E6F0FF; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        box-sizing: border-box;
-    }
-
-    .about-text {
-        text-align: justify;
-        line-height: 1.6;
-        color: #002B5B;
-        font-size: 1.05rem;
-        word-wrap: break-word;
-    }
-
-    .about-text p {
-        margin-bottom: 16px;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .about-container {
-            padding: 15px 15px;
-        }
-        .about-text {
-            font-size: 0.98rem;
-            line-height: 1.5;
-        }
-    }
-    </style>
-
-    <div class="about-container">
-    <div class="about-text">
-    <p><b>[Ô liu - Olympia In U]</b></p>
-    <p>Mọi người đều biết đến “Đường lên đỉnh Olympia” (DLDO) là một chương trình truyền hình dành cho tất cả các bạn học sinh phổ thông trên toàn quốc, nơi thể hiện kiến thức, bản lĩnh của các nhà leo núi qua từng câu hỏi. Không chỉ thế, Olympia còn là một ngã rẽ, là cánh cửa mở ra nhiều cơ hội mới, những mối quan hệ mới cho các bạn thí sinh. Hãy để Ô liu kể bạn nghe câu chuyện của một Olympian - cách mà chúng tôi gọi các bạn tham gia DLDO.</p>
-    <p>Kết thúc những trận đấu gay cấn, các bạn rời trường quay trong những cung bậc cảm xúc khác nhau, rồi bạn chợt nhận ra mình đã là một thành viên trong một đại gia đình có tên Olympians - cộng đồng các thí sinh tham gia chương trình DLDO. Olympians luôn cố gắng sẻ chia, góp sức cùng nhau tạo ra những giá trị tốt đẹp cho cuộc sống. Chúng ta gắn kết qua những ngày vui thỏa sức cùng Ono, qua những màn trình diễn ở Olym Acoustic.</p>
-    <p>Với mục đích duy trì và phát triển các giá trị tốt đẹp, tinh thần lan tỏa của "nhóm máu O", đội tình nguyện Ô liu được thành lập cùng fanpage để các bạn Olympians và mọi người nói riêng có thể theo dõi, đồng hành cũng như chung tay giúp đỡ những hoàn cảnh khó khăn, góp sức trẻ tạo nên giá trị tử tế.</p>
-    <p>Ô liu rất mong nhận được sự quan tâm của các bạn gần xa, nhất là những bạn không phải Olympian. Chúng ta hãy cùng nhau tạo ra giá trị khác biệt. Khi bạn cho đi, bạn chắc chắn sẽ nhận lại nhiều hơn những gì bạn đang có.</p>
-    </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>📝 Ô Liu là...</div>", unsafe_allow_html=True)
+    st.markdown(GIOI_THIEU_HTML, unsafe_allow_html=True)
 
     # --- MISSION & ACTIVITIES ---
-    st.markdown("<div class='section-title'>🎯 Hoạt động của Ô Liu</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>🎯 Hành trình lan tỏa</div>", unsafe_allow_html=True)
     cols = st.columns(4)
     with cols[0]:
         st.markdown("#### 🎮 Tổ chức ngày hội trò chơi")
@@ -709,7 +550,7 @@ elif menu == "👉 Về chúng tôi":
 
 
     # --- GALLERY ---
-    st.markdown("<div class='section-title'>📸 Một số hình ảnh của Ô Liu</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>📸 Khoảnh khắc ý nghĩa cùng Ô Liu</div>", unsafe_allow_html=True)
 
     image_dir = "static"
     image_files = [f for f in os.listdir(image_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
@@ -717,124 +558,15 @@ elif menu == "👉 Về chúng tôi":
 
     def img_to_base64(path):
         with open(path, "rb") as f:
-            data = base64.b64encode(f.read()).decode()
+            data_img = base64.b64encode(f.read()).decode()
         ext = os.path.splitext(path)[1].lower().replace('.', '')
-        return f"data:image/{ext};base64,{data}"
+        return f"data:image/{ext};base64,{data_img}"
 
     images = [img_to_base64(os.path.join(image_dir, f)) for f in image_files]
-
-    slider_html = f"""
-    <style>
-    .wrapper {{
-    width: 100%;
-    overflow: hidden;
-    background: linear-gradient(to right, var(--background-color), var(--secondary-background-color));
-    padding: 30px 0;
-    border-radius: 20px;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
-    position: relative;
-    }}
-
-    .track {{
-    display: flex;
-    width: max-content;
-    animation: moveRight 40s linear infinite;
-    }}
-
-    @keyframes moveRight {{
-    0%   {{ transform: translateX(-50%); }}
-    100% {{ transform: translateX(0%); }}
-    }}
-
-    .track img {{
-    height: 230px;
-    width: auto;
-    margin-right: 20px;
-    border-radius: 16px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-    transition: transform 0.4s ease;
-    flex-shrink: 0;
-    background-color: var(--secondary-background-color);
-    }}
-
-    .track img:hover {{
-    transform: scale(1.05);
-    }}
-    </style>
-
-    <div class="wrapper">
-    <div class="track">
-        {''.join([f'<img src="{img}">' for img in images])}
-        {''.join([f'<img src="{img}">' for img in images])}
-    </div>
-    </div>
-    """
+    images_html = ''.join([f'<img src="{img}">' for img in images])
+    slider_html = SLIDER_HTML_TEMPLATE.format(images_html=images_html)
     st.markdown(slider_html, unsafe_allow_html=True)
 
-
     # --- CONTACT / SOCIAL ---
-    st.markdown("<div class='section-title'>📬 Thông tin liên hệ</div>", unsafe_allow_html=True)
-    st.markdown("""
-    <style>
-    .contact-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 40px 25px;
-        border-radius: 20px;
-        background: linear-gradient(135deg, #E6F0FF, #FFFFFF);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-        box-sizing: border-box;
-        text-align: center;
-    }
-    .contact-text {
-        font-size: 1.1rem;
-        line-height: 1.8;
-        color: #002B5B;
-        margin-bottom: 30px;
-    }
-    .social-icons {
-        display: flex;
-        justify-content: center;
-        gap: 25px;
-        flex-wrap: wrap;
-    }
-    .social-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 15px;
-        width: 70px;
-        height: 70px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .social-card:hover {
-        transform: translateY(-5px) scale(1.1);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
-    .social-card svg {
-        width: 32px;
-        height: 32px;
-        fill: #002B5B; /* màu chủ đạo */
-        transition: fill 0.3s ease;
-    }
-    .social-card:hover svg {
-        fill: #FF8C42; /* màu hover nổi bật */
-    }
-    </style>
-
-    <div class="contact-container">
-        <div class="contact-text">
-            <b>Email:</b> tinhnguyenoliu@gmail.com<br>
-            <b>Trưởng BTC - Nhật Trình:</b> 0388534146<br>
-            <b>Phụ trách gây quỹ - Thảo Trang:</b> 0901367931<br>
-            <b><br>
-            <div class="social-icons">
-                <a href="https://www.facebook.com/oliufanpage" target="_blank" class="social-card"><img src="https://cdn-icons-png.flaticon.com/512/733/733547.png"></a>
-                <a href="https://www.tiktok.com/@tinhnguyenoliu" target="_blank" class="social-card"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046122.png"></a>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>📬 Kết nối cùng chúng mình</div>", unsafe_allow_html=True)
+    st.markdown(SOCIAL_HTML, unsafe_allow_html=True)
