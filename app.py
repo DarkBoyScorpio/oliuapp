@@ -8,7 +8,7 @@ from config import (
                     product_column_map, thoi_gian_nhan_hang, 
                     TARGET_SALES, SCOPE, STK, TEN_CHU_TK, BIN_BANK, 
                     MEO_HTML, PROGRESS_BAR_HTML, PRINT_HTML, NOTE_HTML,
-                    TIEU_DE_HTML, GIOI_THIEU_HTML, SOCIAL_HTML, SLIDER_HTML_TEMPLATE,
+                    TIEU_DE_HTML, GIOI_THIEU_HTML, SOCIAL_HTML, SLIDER_HTML_TEMPLATE, PRINT_MULTI_HTML,
                     GIA_ROW_VALUE, GIA_ROW_NAME, GIA_ROW_START, GIA_ROW_END, 
                     SHEET_HANG_TON_NAME, HANG_TON_NAME_START, HANG_TON_NAME_END, HANG_TON_VALUE_START, HANG_TON_VALUE_END,
                     TIEN_BAN_HANG, MENU_TREE, MIT_500G, THAP_CAM_500G, CHUOI_SAY_ME_DUONG_500G, CHUOI_SAY_MOC_500G, KHOAI_TAY_RONG_BIEN_250G, KHOAI_TAY_MAM_250G,
@@ -483,8 +483,6 @@ elif menu == "📄 Tra cứu đơn hàng":
                 df_khach_hang.loc[df_khach_hang["Thông tin"] == "CHI TIẾT ĐƠN (VUI LÒNG ĐIỀN CHÍNH XÁC VỚI Ô CỘT SỐ LƯỢNG BÊN PHẢI)", "Thông tin"] = "CHI TIẾT ĐƠN"
                 df_khach_hang.loc[df_khach_hang["Thông tin"] == "TỔNG TIỀNCẦN TRẢ(1)+(2)", "Thông tin"] = "TỔNG TIỀN CẦN TRẢ"
                 df_khach_hang.loc[df_khach_hang["Thông tin"] == TIEN_BAN_HANG, "Thông tin"] = "TIỀN HÀNG"
-                df_khach_hang.loc[df_khach_hang["Thông tin"] == "Đã thanh toán", "Thông tin"] = "ĐÃ THANH TOÁN"
-                df_khach_hang.loc[df_khach_hang["Thông tin"] == "ĐÃ GIAO TNV(TNV điền hoặc người giao điền)", "Thông tin"] = "ĐÃ GIAO TNV"
                 
                 df_khach_hang.loc[df_khach_hang["Thông tin"] == "TỔNG TIỀN CẦN TRẢ", "Giá trị"] = df_khach_hang.loc[
                                                                                                 df_khach_hang["Thông tin"] == "TỔNG TIỀN CẦN TRẢ", "Giá trị"
@@ -572,3 +570,145 @@ elif menu == "👉 Về chúng tôi":
     # --- CONTACT / SOCIAL ---
     st.markdown("<div class='section-title'>📬 Kết nối cùng chúng mình</div>", unsafe_allow_html=True)
     st.markdown(SOCIAL_HTML, unsafe_allow_html=True)
+
+
+elif menu == "🖨️ In đơn hàng":
+    components.html(MEO_HTML, height=80)
+    st.title("📄 In đơn hàng loạt")
+    data = sheet.get_all_values()
+    df = pd.DataFrame(data[GIA_ROW_NAME+1:], columns=data[GIA_ROW_NAME])
+    df.columns = df.columns.str.replace('\n', '', regex=True)
+    df = df.loc[:, ~df.columns.duplicated()]
+
+    # Lấy list STT có sẵn
+    list_stt = df["STT"].dropna().unique().tolist()
+
+    chua_soan_don = (pd.to_numeric(df[df["ĐÃ SOẠN ĐƠN"] == "FALSE"]["STT"],errors="coerce").dropna().astype(int).unique().tolist())
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        with st.form("form_chua_soan"):
+            st.write(f"STT các đơn chưa soạn: {', '.join(map(str, chua_soan_don))}")
+            submitted = st.form_submit_button("In tất cả đơn chưa soạn")
+            
+            if submitted:
+                df_filtered = df[
+                                    pd.to_numeric(df["STT"], errors="coerce").isin(chua_soan_don)
+                                ]
+                if df_filtered.empty:
+                    st.warning("⚠️ Không tìm thấy đơn hàng.")
+                
+                else:
+                    all_orders_html = ""
+                    for _, row in df_filtered.iterrows():
+                        row_data = row.to_dict()
+
+                        filtered_data = {
+                            k: v for k, v in row_data.items()
+                            if str(v).strip() not in ["", "None", "nan"]
+                        }
+
+                        thong_tin_dat_hang = {}
+                        mon_hang_da_mua = {}
+
+                        for k, v in filtered_data.items():
+                            if k.strip() in list(gia_mat_hang.keys()) and float(v) > 0:
+                                mon_hang_da_mua[k] = v
+                            elif k not in list(gia_mat_hang.keys()):
+                                thong_tin_dat_hang[k] = v
+                        
+                        df_khach_hang = pd.DataFrame(list(thong_tin_dat_hang.items()), columns=["Thông tin", "Giá trị"])
+                        df_khach_hang.loc[df_khach_hang["Thông tin"] == "TỔNG TIỀNCẦN TRẢ(1)+(2)", "Thông tin"] = "TỔNG TIỀN CẦN TRẢ"
+                        df_khach_hang.loc[df_khach_hang["Thông tin"] == TIEN_BAN_HANG, "Thông tin"] = "TIỀN HÀNG"
+                        df_khach_hang.loc[df_khach_hang["Thông tin"] == "CHI TIẾT ĐƠN (VUI LÒNG ĐIỀN CHÍNH XÁC VỚI Ô CỘT SỐ LƯỢNG BÊN PHẢI)", "Thông tin"] = "CHI TIẾT ĐƠN"
+                        
+                        df_khach_hang.loc[df_khach_hang["Thông tin"] == "TỔNG TIỀN CẦN TRẢ", "Giá trị"] = df_khach_hang.loc[
+                                                                                                        df_khach_hang["Thông tin"] == "TỔNG TIỀN CẦN TRẢ", "Giá trị"
+                                                                                                    ].map(lambda x: f"{int(x):,}".replace(",", "."))
+                        df_khach_hang.loc[df_khach_hang["Thông tin"] == "TIỀN HÀNG", "Giá trị"] = df_khach_hang.loc[
+                                                                                        df_khach_hang["Thông tin"] == "TIỀN HÀNG", "Giá trị"
+                                                                                    ].map(lambda x: f"{int(x):,}".replace(",", "."))
+                        
+                        df_khach_hang = df_khach_hang[df_khach_hang["Thông tin"] != "Đã thanh toán"]
+                        df_khach_hang = df_khach_hang[df_khach_hang["Thông tin"] != "ĐÃ SOẠN ĐƠN"]
+                        df_khach_hang = df_khach_hang[df_khach_hang["Thông tin"] != "ĐÃ GIAO TNV(TNV điền hoặc người giao điền)"]
+                                
+                        df_mon_hang = pd.DataFrame(list(mon_hang_da_mua.items()), columns=["Sản phẩm", "Số lượng"])
+
+                        order_html = f"""
+                            <div class="order">
+                                <h3>📄 Đơn hàng STT: {row_data.get("STT")}</h3>
+                                {df_khach_hang.to_html(index=False, border=1)}
+                                <br>
+                                {df_mon_hang.to_html(index=False, border=1)}
+                            </div>
+                        """
+
+                        all_orders_html += order_html
+
+                    components.html(PRINT_MULTI_HTML.format(all_orders_html=all_orders_html), height=100)
+
+    
+    with col2:
+        with st.form("form_stt"):
+            selected_stt = st.multiselect(
+                "🔢 Chọn nhiều STT để in hàng loạt",
+                options=list_stt, accept_new_options=False
+            )
+            submitted = st.form_submit_button("Xác nhận")
+        if submitted:
+            df_filtered = df[df["STT"].isin(selected_stt)]
+            
+            if df_filtered.empty:
+                st.warning("⚠️ Không tìm thấy đơn hàng.")
+            
+            else:
+                all_orders_html = ""
+
+                for _, row in df_filtered.iterrows():
+                    row_data = row.to_dict()
+
+                    filtered_data = {
+                        k: v for k, v in row_data.items()
+                        if str(v).strip() not in ["", "None", "nan"]
+                    }
+
+                    thong_tin_dat_hang = {}
+                    mon_hang_da_mua = {}
+
+                    for k, v in filtered_data.items():
+                        if k.strip() in list(gia_mat_hang.keys()) and float(v) > 0:
+                            mon_hang_da_mua[k] = v
+                        elif k not in list(gia_mat_hang.keys()):
+                            thong_tin_dat_hang[k] = v
+
+                    df_khach_hang = pd.DataFrame(list(thong_tin_dat_hang.items()), columns=["Thông tin", "Giá trị"])
+                    df_khach_hang.loc[df_khach_hang["Thông tin"] == "TỔNG TIỀNCẦN TRẢ(1)+(2)", "Thông tin"] = "TỔNG TIỀN CẦN TRẢ"
+                    df_khach_hang.loc[df_khach_hang["Thông tin"] == TIEN_BAN_HANG, "Thông tin"] = "TIỀN HÀNG"
+                    df_khach_hang.loc[df_khach_hang["Thông tin"] == "CHI TIẾT ĐƠN (VUI LÒNG ĐIỀN CHÍNH XÁC VỚI Ô CỘT SỐ LƯỢNG BÊN PHẢI)", "Thông tin"] = "CHI TIẾT ĐƠN"
+                    
+                    df_khach_hang.loc[df_khach_hang["Thông tin"] == "TỔNG TIỀN CẦN TRẢ", "Giá trị"] = df_khach_hang.loc[
+                                                                                                    df_khach_hang["Thông tin"] == "TỔNG TIỀN CẦN TRẢ", "Giá trị"
+                                                                                                ].map(lambda x: f"{int(x):,}".replace(",", "."))
+                    df_khach_hang.loc[df_khach_hang["Thông tin"] == "TIỀN HÀNG", "Giá trị"] = df_khach_hang.loc[
+                                                                                    df_khach_hang["Thông tin"] == "TIỀN HÀNG", "Giá trị"
+                                                                                ].map(lambda x: f"{int(x):,}".replace(",", "."))
+                    
+                    df_khach_hang = df_khach_hang[df_khach_hang["Thông tin"] != "Đã thanh toán"]
+                    df_khach_hang = df_khach_hang[df_khach_hang["Thông tin"] != "ĐÃ SOẠN ĐƠN"]
+                    df_khach_hang = df_khach_hang[df_khach_hang["Thông tin"] != "ĐÃ GIAO TNV(TNV điền hoặc người giao điền)"]
+                    df_mon_hang = pd.DataFrame(list(mon_hang_da_mua.items()), columns=["Sản phẩm", "Số lượng"])
+
+                    order_html = f"""
+                        <div class="order">
+                            <h3>📄 Đơn hàng STT: {row_data.get("STT")}</h3>
+                            {df_khach_hang.to_html(index=False, border=1)}
+                            <br>
+                            {df_mon_hang.to_html(index=False, border=1)}
+                        </div>
+                    """
+
+                    all_orders_html += order_html
+
+                components.html(PRINT_MULTI_HTML.format(all_orders_html=all_orders_html), height=100)

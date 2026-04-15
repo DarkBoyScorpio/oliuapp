@@ -12,7 +12,7 @@ SHEET_HANG_TON_NAME = "Quản lí tồn"
 
 TIEN_BAN_HANG = "TIỀN BÁN HÀNG (2)"
 
-MENU_TREE = ["📥 Nhập đơn hàng", "📄 Tra cứu đơn hàng", "📊 Con số biết nói", "👉 Về chúng tôi"]
+MENU_TREE = ["📥 Nhập đơn hàng", "📄 Tra cứu đơn hàng", "🖨️ In đơn hàng", "📊 Con số biết nói", "👉 Về chúng tôi"]
 
 MIT_500G = "MÍT 500G"
 THAP_CAM_500G = "THẬP CẨM 500G"
@@ -490,3 +490,49 @@ SLIDER_HTML_TEMPLATE = """
     </div>
 </div>
 """
+
+PRINT_MULTI_HTML = """
+                <button onclick="printAll()" style="
+                    background-color:#000;
+                    color:white;
+                    padding:0.5rem 1rem;
+                    border:none;
+                    border-radius:6px;
+                    cursor:pointer;">
+                    🖨️ In
+                </button>
+
+                <script>
+                function printAll() {{
+                    const win = window.open('', '', 'width=900,height=700');
+
+                    win.document.write(`
+                        <html>
+                        <head>
+                            <title>In hàng loạt</title>
+                            <style>
+                                body {{ font-family: Arial; padding: 20px; }}
+                                table {{ border-collapse: collapse; width: 100%; margin-top: 10px; }}
+                                th, td {{ border: 1px solid #ccc; padding: 8px; }}
+
+                                .order {{
+                                    page-break-after: always;
+                                }}
+                            </style>
+                        </head>
+                        <body>
+                            {all_orders_html}
+                        </body>
+                        </html>
+                    `);
+
+                    win.document.close();
+
+                    // 🔥 QUAN TRỌNG: chỉ print 1 lần
+                    win.onload = function() {{
+                        win.focus();
+                        win.print();
+                    }};
+                }}
+                </script>
+                """
