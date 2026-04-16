@@ -237,7 +237,20 @@ def show_qr_thanh_toan(amount: int, ndck: str):
 if menu == "📥 Nhập đơn hàng":
     components.html(MEO_HTML, height=80)
     st.title("📦 Nhập đơn hàng")
-    st.markdown("Vui lòng điền các thông tin bên dưới. Sau đó ấn 'Xác nhận & Gửi đơn'")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("Vui lòng điền các thông tin bên dưới. Sau đó ấn 'Xác nhận & Gửi đơn'")
+    with col2:
+        st.markdown("""
+            <div style="font-size:14px;">
+                📍 Địa chỉ nhận hàng: Chung Cư Bình Minh, Quận 2 —
+                <a href="https://maps.app.goo.gl/ggeuzpja9fodBJNz9" target="_blank">
+                Link Google Map
+                </a>
+                </div>
+            """, unsafe_allow_html=True
+        )
+        
     with st.form("form_nhap_don"):
         # ==== PHẦN 1: Thông tin khách hàng ====
         with st.expander("ℹ️ Thông tin khách hàng", expanded=False):
