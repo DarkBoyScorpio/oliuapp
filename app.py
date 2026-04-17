@@ -317,8 +317,10 @@ if menu == "📥 Nhập đơn hàng":
         st.table(df_hang)
 
         # tong_ket.update(mat_hang_co_mua)
-
-        if st.button("📩 Gửi đơn"):
+        if df_hang.empty:
+            st.write("Đừng để giỏ hàng cô đơn nhéeee 🛍️")
+        
+        if st.button("📩 Gửi đơn", disabled=df_hang.empty):
             with st.spinner("⏳ Đang xử lý đơn hàng..."):
                 column_values = sheet.col_values(2)
                 first_empty_row = len(column_values) + 1
