@@ -1,3 +1,4 @@
+import time, random
 import pandas as pd
 import altair as alt
 import streamlit as st
@@ -31,22 +32,71 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+@st.cache_resource
+def get_gspread_client(GSP_CRED, SCOPE):
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(
+        json.loads(base64.b64decode(GSP_CRED).decode("utf-8")), SCOPE
+    )
+    return gspread.authorize(creds)
+
+# ===== CACHE SPREADSHEET =====
+@st.cache_resource
+def get_spreadsheet(_client, SHARE_URL):
+    return _client.open_by_url(SHARE_URL)
+
+# ===== CACHE DATA (READ) =====
+@st.cache_data(ttl=60)  # cache 60s
+def get_sheet_values(_sheet):
+    # retry chống 429
+    for i in range(3):
+        try:
+            return _sheet.get_all_values()
+        except Exception as e:
+            if "429" in str(e):
+                time.sleep(5 + random.random())
+            else:
+                raise
+    raise Exception("❌ Too many requests (429)")
+
+
+# ===== CACHE STOCK =====
+@st.cache_data(ttl=60)
+def get_stock_data(_worksheetton, name_range, value_range):
+    headers = _worksheetton.get(name_range)
+    values = _worksheetton.get(value_range)
+    return headers, values
+
 menu = st.sidebar.radio("📋 Menu", MENU_TREE)
 
 creds = ServiceAccountCredentials.from_json_keyfile_dict(
             json.loads(base64.b64decode(GSP_CRED).decode("utf-8")), SCOPE
         )
-client = gspread.authorize(creds)
-sheet = client.open_by_url(SHARE_URL).sheet1
 
-gia_mat_hang = get_gia_hang(sheet.get_all_values(), row_value = GIA_ROW_VALUE, row_name = GIA_ROW_NAME, row_start = GIA_ROW_START, row_end = GIA_ROW_END)
+client = get_gspread_client(GSP_CRED, SCOPE)
+spreadsheet = get_spreadsheet(client, SHARE_URL)
 
-# ===== GET HANG TON WORKSHEET =====
-worksheetton = client.open_by_url(SHARE_URL).worksheet(SHEET_HANG_TON_NAME)
+sheet = spreadsheet.sheet1
+worksheetton = spreadsheet.worksheet(SHEET_HANG_TON_NAME)
+
+if "sheet_data" not in st.session_state:
+    st.session_state.sheet_data = get_sheet_values(sheet)
+    
+data = st.session_state.sheet_data
+
+gia_mat_hang = get_gia_hang(
+    data,
+    row_value=GIA_ROW_VALUE,
+    row_name=GIA_ROW_NAME,
+    row_start=GIA_ROW_START,
+    row_end=GIA_ROW_END
+)
 
 # ===== READ HEADER & VALUE =====
-headers_ton = worksheetton.get(f"{HANG_TON_NAME_START}:{HANG_TON_NAME_END}")
-values_ton  = worksheetton.get(f"{HANG_TON_VALUE_START}:{HANG_TON_VALUE_END}")
+headers_ton, values_ton = get_stock_data(
+    worksheetton,
+    f"{HANG_TON_NAME_START}:{HANG_TON_NAME_END}",
+    f"{HANG_TON_VALUE_START}:{HANG_TON_VALUE_END}"
+)
 stock = get_stock(headers_ton=headers_ton, values_ton=values_ton)
 
 # ===== CHECK DISABLED =====
@@ -66,7 +116,7 @@ def show_dashboard():
     st.title("📊 Số gì ra, mấy gì ra...")
 
     # Đọc dữ liệu từ Google Sheet (hoặc cache lại để không load nhiều)
-    data = sheet.get_all_values()
+    data = st.session_state.sheet_data
     df = pd.DataFrame(data[GIA_ROW_NAME+1:], columns=data[GIA_ROW_NAME])
     df.columns = df.columns.str.replace('\n', '', regex=True)
 
@@ -269,36 +319,36 @@ if menu == "📥 Nhập đơn hàng":
         with st.expander("🍯 Mật ong, Mắm, Điều", expanded=False):
             col1, col2 = st.columns(2)
             with col1:
-                mat_ong_500ml = st.number_input("🍯 Mật ong 500ml", min_value=0, max_value=get_max_stock("MẬT ONG 500ML"), step=1, disabled=is_disabled("MẬT ONG 500ML"))
-                dieu_muoi_200g = st.number_input("🥜 Điều muối 200g", min_value=0, max_value=get_max_stock("ĐIỀU RANG MUỐI 200G"), step=1, disabled=is_disabled("ĐIỀU RANG MUỐI 200G"))
-                dieu_mam_ot_500g = st.number_input("🌶️ Điều mắm ớt 500g", min_value=0, max_value=get_max_stock("ĐIỀU MẮM ỚT 500G"), step=1, disabled=is_disabled("ĐIỀU MẮM ỚT 500G"))
+                mat_ong_500ml = st.number_input("🍯 Mật ong 500ml", min_value=0, max_value=max(0, get_max_stock("MẬT ONG 500ML")), step=1, disabled=is_disabled("MẬT ONG 500ML"))
+                dieu_muoi_200g = st.number_input("🥜 Điều muối 200g", min_value=0, max_value=max(0, get_max_stock("ĐIỀU RANG MUỐI 200G")), step=1, disabled=is_disabled("ĐIỀU RANG MUỐI 200G"))
+                dieu_mam_ot_500g = st.number_input("🌶️ Điều mắm ớt 500g", min_value=0, max_value=max(0, get_max_stock("ĐIỀU MẮM ỚT 500G")), step=1, disabled=is_disabled("ĐIỀU MẮM ỚT 500G"))
             with col2:
-                mat_ong_1l = st.number_input("🍯 Mật ong 1 lít", min_value=0, max_value=get_max_stock("MẬT ONG 1 LÍT"), step=1, disabled=is_disabled("MẬT ONG 1 LÍT"))
-                dieu_muoi_500g = st.number_input("🥜 Điều muối 500g", min_value=0, max_value=get_max_stock("ĐIỀU RANG MUỐI 500G"), step=1, disabled=is_disabled("ĐIỀU RANG MUỐI 500G"))
-                mam_1l = st.number_input("🥫 Mắm 1 lít", min_value=0, max_value=get_max_stock("MẮM 1 LÍT"), step=1, disabled=is_disabled("MẮM 1 LÍT"))
+                mat_ong_1l = st.number_input("🍯 Mật ong 1 lít", min_value=0, max_value=max(0, get_max_stock("MẬT ONG 1 LÍT")), step=1, disabled=is_disabled("MẬT ONG 1 LÍT"))
+                dieu_muoi_500g = st.number_input("🥜 Điều muối 500g", min_value=0, max_value=max(0, get_max_stock("ĐIỀU RANG MUỐI 500G")), step=1, disabled=is_disabled("ĐIỀU RANG MUỐI 500G"))
+                mam_1l = st.number_input("🥫 Mắm 1 lít", min_value=0, max_value=max(0, get_max_stock("MẮM 1 LÍT")), step=1, disabled=is_disabled("MẮM 1 LÍT"))
 
         # ==== PHẦN 3: Snack - Mít, Chuối, Khoai, Gạo ====
         with st.expander("🍱 Rau củ quả - trái cây sấy", expanded=False):
             col1, col2 = st.columns(2)
             with col1:
-                mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, max_value=get_max_stock("MÍT 500G"), step=1, disabled=is_disabled("MÍT 500G"))
-                thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, max_value=get_max_stock("THẬP CẨM 500G"), step=1, disabled=is_disabled("THẬP CẨM 500G"))
-                chuoi_me_duong_500g = st.number_input("🍌 Chuối sấy mè đường 500g", min_value=0, max_value=get_max_stock("CHUỐI SẤY MÈ ĐƯỜNG 500G"), step=1, disabled=is_disabled("CHUỐI SẤY MÈ ĐƯỜNG 500G"))
-                chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, max_value=get_max_stock("CHUỐI SẤY MỘC 500G"), step=1, disabled=is_disabled("CHUỐI SẤY MỘC 500G"))
+                mit_500g = st.number_input("🥭 Mít sấy 500g", min_value=0, max_value=max(0, get_max_stock("MÍT 500G")), step=1, disabled=is_disabled("MÍT 500G"))
+                thap_cam_500g = st.number_input("🍱 Thập cẩm 500g", min_value=0, max_value=max(0, get_max_stock("THẬP CẨM 500G")), step=1, disabled=is_disabled("THẬP CẨM 500G"))
+                chuoi_me_duong_500g = st.number_input("🍌 Chuối sấy mè đường 500g", min_value=0, max_value=max(0, get_max_stock("CHUỐI SẤY MÈ ĐƯỜNG 500G")), step=1, disabled=is_disabled("CHUỐI SẤY MÈ ĐƯỜNG 500G"))
+                chuoi_500g = st.number_input("🍌 Chuối sấy mộc 500g", min_value=0, max_value=max(0, get_max_stock("CHUỐI SẤY MỘC 500G")), step=1, disabled=is_disabled("CHUỐI SẤY MỘC 500G"))
             with col2:
-                ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, max_value=get_max_stock("KHOAI TÂY RONG BIỂN 250G"), step=1, disabled=is_disabled("KHOAI TÂY RONG BIỂN 250G"))
-                ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, max_value=get_max_stock("KHOAI TÂY MẮM 250G"), step=1, disabled=is_disabled("KHOAI TÂY MẮM 250G"))
-                km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, max_value=get_max_stock("KHOAI MÔN TRỨNG CUA 250G"), step=1, disabled=is_disabled("KHOAI MÔN TRỨNG CUA 250G"))
+                ktrb_250g = st.number_input("🥔 Khoai tây rong biển 250g", min_value=0, max_value=max(0, get_max_stock("KHOAI TÂY RONG BIỂN 250G")), step=1, disabled=is_disabled("KHOAI TÂY RONG BIỂN 250G"))
+                ktmam_250g = st.number_input("🥔 Khoai tây mắm 250g", min_value=0, max_value=max(0, get_max_stock("KHOAI TÂY MẮM 250G")), step=1, disabled=is_disabled("KHOAI TÂY MẮM 250G"))
+                km_trung_cua_250g = st.number_input("🍠 Khoai môn trứng cua 250g", min_value=0, max_value=max(0, get_max_stock("KHOAI MÔN TRỨNG CUA 250G")), step=1, disabled=is_disabled("KHOAI MÔN TRỨNG CUA 250G"))
 
         with st.expander("🍚 Cơm cháy, Bánh tráng mắm", expanded=False):
             col1, col2 = st.columns(2)
             with col1:
-                nep_chay_3 = st.number_input("🍙 Nếp cháy chà bông x3", min_value=0, max_value=math.floor(get_max_stock("NẾP CHÁY CHÀ BÔNG 150G")/3), step=1, disabled=is_disabled("NẾP CHÁY CHÀ BÔNG 150G"))
-                com_chay_200g = st.number_input("🍚 Cơm cháy chà bông 200g", min_value=0, max_value=get_max_stock("CƠM CHÁY CHÀ BÔNG 200G"), step=1, disabled=is_disabled("CƠM CHÁY CHÀ BÔNG 200G"))
-                banh_trang_mam = st.number_input("🥖 Bánh tráng mắm", min_value=0, max_value=get_max_stock("BÁNH TRÁNG MẮM"), step=1, disabled=is_disabled("BÁNH TRÁNG MẮM"))
+                nep_chay_3 = st.number_input("🍙 Nếp cháy chà bông x3", min_value=0, max_value=max(0, math.floor(get_max_stock("NẾP CHÁY CHÀ BÔNG 150G")/3)), step=1, disabled=is_disabled("NẾP CHÁY CHÀ BÔNG 150G"))
+                com_chay_200g = st.number_input("🍚 Cơm cháy chà bông 200g", min_value=0, max_value=max(0, get_max_stock("CƠM CHÁY CHÀ BÔNG 200G")), step=1, disabled=is_disabled("CƠM CHÁY CHÀ BÔNG 200G"))
+                banh_trang_mam = st.number_input("🥖 Bánh tráng mắm", min_value=0, max_value=max(0, get_max_stock("BÁNH TRÁNG MẮM")), step=1, disabled=is_disabled("BÁNH TRÁNG MẮM"))
             with col2:
-                nep_chay_5 = st.number_input("🍙 Nếp cháy chà bông x5", min_value=0, max_value=math.floor(get_max_stock("NẾP CHÁY CHÀ BÔNG 150G")/5), step=1, disabled=is_disabled("NẾP CHÁY CHÀ BÔNG 150G"))
-                gao_lut_rb_200g = st.number_input("🌾 Gạo lứt rong biển 200g", min_value=0, max_value=get_max_stock("GẠO LỨT RONG BIỂN 200G"), step=1, disabled=is_disabled("GẠO LỨT RONG BIỂN 200G"))
+                nep_chay_5 = st.number_input("🍙 Nếp cháy chà bông x5", min_value=0, max_value=max(0, math.floor(get_max_stock("NẾP CHÁY CHÀ BÔNG 150G")/5)), step=1, disabled=is_disabled("NẾP CHÁY CHÀ BÔNG 150G"))
+                gao_lut_rb_200g = st.number_input("🌾 Gạo lứt rong biển 200g", min_value=0, max_value=max(0, get_max_stock("GẠO LỨT RONG BIỂN 200G")), step=1, disabled=is_disabled("GẠO LỨT RONG BIỂN 200G"))
             
         submitted = st.form_submit_button("🚀 Xác nhận & Gửi đơn", type="primary")
 
@@ -333,19 +383,19 @@ if menu == "📥 Nhập đơn hàng":
                             continue
                         sheet.update_cell(first_empty_row, col_idx, value)
                     except IndexError as e:
-                        print(f"Lỗi: {e} tại cột {col_idx}")
+                        pass
 
-                stt_don_hang_moi = sheet.row_values(first_empty_row)[0]
                 st.toast("✅ Đơn hàng đã ghi thành công!")
-                st.toast(f"STT đơn hàng: **{stt_don_hang_moi}**")
+                st.toast(f"STT đơn hàng: **{row[0]}**")
                 # Lưu trạng thái đơn hàng đã gửi
-                st.session_state["don_hang_moi"] = stt_don_hang_moi
+                st.session_state["don_hang_moi"] = row[0]
+                st.session_state.sheet_data = get_sheet_values(sheet)
 
         # Nếu đã gửi đơn, hiển thị nút tạo QR
         if st.session_state["don_hang_moi"]:
             if st.button("💳 Bấm vào đây để tạo mã QR thanh toán", type="primary"):
                 stt_don_hang_moi = st.session_state["don_hang_moi"]
-                data = sheet.get_all_values()
+                data = st.session_state.sheet_data
                 df = pd.DataFrame(data[GIA_ROW_NAME+1:], columns=data[GIA_ROW_NAME])
                 df.columns = df.columns.str.replace('\n', '', regex=True)
                 df = df.loc[:, ~df.columns.duplicated()]
@@ -449,7 +499,7 @@ if menu == "📥 Nhập đơn hàng":
 elif menu == "📄 Tra cứu đơn hàng":
     components.html(MEO_HTML, height=80)
     st.title("📄 Xem đơn hàng của bạn")
-    data = sheet.get_all_values()
+    data = st.session_state.sheet_data
     df = pd.DataFrame(data[GIA_ROW_NAME+1:], columns=data[GIA_ROW_NAME])
     df.columns = df.columns.str.replace('\n', '', regex=True)
     df = df.loc[:, ~df.columns.duplicated()]
@@ -590,7 +640,7 @@ elif menu == "👉 Về chúng tôi":
 elif menu == "🖨️ In đơn hàng":
     components.html(MEO_HTML, height=80)
     st.title("📄 In đơn hàng loạt")
-    data = sheet.get_all_values()
+    data = st.session_state.sheet_data
     df = pd.DataFrame(data[GIA_ROW_NAME+1:], columns=data[GIA_ROW_NAME])
     df.columns = df.columns.str.replace('\n', '', regex=True)
     df = df.loc[:, ~df.columns.duplicated()]
