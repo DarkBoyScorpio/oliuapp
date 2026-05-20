@@ -9,7 +9,8 @@ from config import (
     KHOAI_TAY_RONG_BIEN_250G, KHOAI_TAY_MAM_250G, KHOAI_MON_TRUNG_CUA_250G,
     NEP_CHAY_CHA_BONG_150G_X3, NEP_CHAY_CHA_BONG_150G_X5, COM_CHAY_CHA_BONG_200G,
     GAO_LUT_RONG_BIEN_200G, BANH_TRANG_MAM, MAT_ONG_500ML, MAT_ONG_1_LIT,
-    MAM_1_LIT, DIEU_RANG_MUOI_200G, DIEU_RANG_MUOI_500G, DIEU_MAM_OT_500G
+    MAM_1_LIT, DIEU_RANG_MUOI_200G, DIEU_RANG_MUOI_500G, DIEU_MAM_OT_500G,
+    VI_NGAN, VI_DAI, BOP_VIET, TUI_XACH_NHO, TUI_XACH_LON, TUI_DUNG_COM, TUI_DUNG_DT
 )
 from util import normalize_key, convert_name, get_sheet_values
 
@@ -77,6 +78,16 @@ def show_order_entry(sheet, stock_data):
             nc_5 = c2.number_input("🍙 Nếp cháy chà bông x5", min_value=0, max_value=math.floor(check_stock("NẾP CHÁY CHÀ BÔNG 150G")/5), step=1)
             gl_rb = c2.number_input("🌾 Gạo lứt rong biển 200g", min_value=0, max_value=check_stock("GẠO LỨT RONG BIỂN 200G"), step=1)
 
+        with st.expander("👜 Túi xách & Ví vải", expanded=False):
+            c1, c2 = st.columns(2)
+            v_ngan = c1.number_input("👛 Ví ngắn", min_value=0, max_value=check_stock("VÍ NGẮN"), step=1)
+            v_dai = c2.number_input("👝 Ví dài", min_value=0, max_value=check_stock("VÍ DÀI"), step=1)
+            b_viet = c1.number_input("✏️ Bóp viết", min_value=0, max_value=check_stock("BÓP VIẾT"), step=1)
+            tx_nho = c2.number_input("👜 Túi xách nhỏ", min_value=0, max_value=check_stock("TÚI XÁCH NHỎ"), step=1)
+            tx_lon = c1.number_input("🧳 Túi xách lớn", min_value=0, max_value=check_stock("TÚI XÁCH LỚN"), step=1)
+            td_com = c2.number_input("🍱 Túi đựng cơm", min_value=0, max_value=check_stock("TÚI ĐỰNG CƠM"), step=1)
+            td_dt = c1.number_input("📱 Túi đựng điện thoại", min_value=0, max_value=check_stock("TÚI ĐỰNG ĐIỆN THOẠI"), step=1)
+
         submitted = st.form_submit_button("🚀 Xác nhận & Gửi đơn", type="primary")
 
     @st.dialog(title="🧾 Xác nhận đơn hàng", width="large")
@@ -137,11 +148,13 @@ def show_order_entry(sheet, stock_data):
                 KHOAI_TAY_RONG_BIEN_250G: kt_rb, KHOAI_TAY_MAM_250G: kt_mam, KHOAI_MON_TRUNG_CUA_250G: km_trung,
                 NEP_CHAY_CHA_BONG_150G_X3: nc_3, NEP_CHAY_CHA_BONG_150G_X5: nc_5, COM_CHAY_CHA_BONG_200G: cc_200,
                 GAO_LUT_RONG_BIEN_200G: gl_rb, BANH_TRANG_MAM: bt_mam, MAT_ONG_500ML: mo_500, MAT_ONG_1_LIT: mo_1l,
-                MAM_1_LIT: mam, DIEU_RANG_MUOI_200G: d_200, DIEU_RANG_MUOI_500G: d_500, DIEU_MAM_OT_500G: d_mam
+                MAM_1_LIT: mam, DIEU_RANG_MUOI_200G: d_200, DIEU_RANG_MUOI_500G: d_500, DIEU_MAM_OT_500G: d_mam,
+                VI_NGAN: v_ngan, VI_DAI: v_dai, BOP_VIET: b_viet, TUI_XACH_NHO: tx_nho,
+                TUI_XACH_LON: tx_lon, TUI_DUNG_COM: td_com, TUI_DUNG_DT: td_dt
             }
             purchased = {k: v for k, v in mapping_items.items() if v > 0}
             
-            raw_row = [""] * 38
+            raw_row = [""] * 45
             raw_row[1], raw_row[2], raw_row[3], raw_row[4], raw_row[5], raw_row[6], raw_row[7] = ten_tnv, ten_khach, chi_tiet_don, sdt, dia_chi, quan_tinh, str(thoi_gian_nhan)
             for k, v in purchased.items():
                 raw_row[product_column_map[k] - 1] = v

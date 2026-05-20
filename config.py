@@ -4,12 +4,12 @@
 GIA_ROW_VALUE = 3 
 GIA_ROW_NAME = 4 
 GIA_ROW_START = 14 
-GIA_ROW_END = 32 
+GIA_ROW_END = 39
 
 HANG_TON_NAME_START = "B3" 
-HANG_TON_NAME_END = "B19" 
+HANG_TON_NAME_END = "B26" 
 HANG_TON_VALUE_START = "Q3" 
-HANG_TON_VALUE_END = "Q19" 
+HANG_TON_VALUE_END = "Q26" 
 
 SHEET_HANG_TON_NAME = "Quản lí tồn" 
 TIEN_BAN_HANG = "TIỀN BÁN HÀNG (2)" 
@@ -35,6 +35,13 @@ MAM_1_LIT = "MẮM 1 LÍT"
 DIEU_RANG_MUOI_200G = "ĐIỀU RANG MUỐI 200G"
 DIEU_RANG_MUOI_500G = "ĐIỀU RANG MUỐI 500G"
 DIEU_MAM_OT_500G = "ĐIỀU MẮM ỚT 500G"
+VI_NGAN = "VÍ NGẮN"
+VI_DAI = "VÍ DÀI"
+BOP_VIET = "BÓP VIẾT"
+TUI_XACH_NHO = "TÚI XÁCH NHỎ"
+TUI_XACH_LON = "TÚI XÁCH LỚN"
+TUI_DUNG_COM = "TÚI ĐỰNG CƠM"
+TUI_DUNG_DT = "TÚI ĐỰNG ĐIỆN THOẠI"
 
 # Sơ đồ khớp cột chính xác trên Google Sheet của bạn
 product_column_map = {
@@ -42,7 +49,14 @@ product_column_map = {
     KHOAI_TAY_RONG_BIEN_250G: 19, KHOAI_TAY_MAM_250G: 20, KHOAI_MON_TRUNG_CUA_250G: 21, 
     NEP_CHAY_CHA_BONG_150G_X3: 22, NEP_CHAY_CHA_BONG_150G_X5: 23, COM_CHAY_CHA_BONG_200G: 24, 
     GAO_LUT_RONG_BIEN_200G: 25, BANH_TRANG_MAM: 26, MAT_ONG_500ML: 27, MAT_ONG_1_LIT: 28, 
-    MAM_1_LIT: 29, DIEU_RANG_MUOI_200G: 30, DIEU_RANG_MUOI_500G: 31, DIEU_MAM_OT_500G: 32
+    MAM_1_LIT: 29, DIEU_RANG_MUOI_200G: 30, DIEU_RANG_MUOI_500G: 31, DIEU_MAM_OT_500G: 32,
+    VI_NGAN: 33,         # Cột AG
+    VI_DAI: 34,          # Cột AH
+    BOP_VIET: 35,        # Cột AI
+    TUI_XACH_NHO: 36,    # Cột AJ
+    TUI_XACH_LON: 37,    # Cột AK
+    TUI_DUNG_COM: 38,    # Cột AL
+    TUI_DUNG_DT: 39      # Cột AM
 }
 
 thoi_gian_nhan_hang = ["", "Nhận trực tiếp - Trưa thứ 7", "Bookship - Chiều thứ 7", "Bookship - Chủ nhật"]
