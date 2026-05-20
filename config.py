@@ -1,19 +1,22 @@
-GIA_ROW_VALUE = 3
-GIA_ROW_NAME = 4
-GIA_ROW_START = 14
-GIA_ROW_END = 32
+# config.py
 
-HANG_TON_NAME_START = "B3"
-HANG_TON_NAME_END = "B19"
-HANG_TON_VALUE_START = "Q3"
-HANG_TON_VALUE_END = "Q19"
+# --- CẤU HÌNH LIÊN KẾT GOOGLE SHEETS GRAB TỪ REPO ---
+GIA_ROW_VALUE = 3 
+GIA_ROW_NAME = 4 
+GIA_ROW_START = 14 
+GIA_ROW_END = 32 
 
-SHEET_HANG_TON_NAME = "Quản lí tồn"
+HANG_TON_NAME_START = "B3" 
+HANG_TON_NAME_END = "B19" 
+HANG_TON_VALUE_START = "Q3" 
+HANG_TON_VALUE_END = "Q19" 
 
-TIEN_BAN_HANG = "TIỀN BÁN HÀNG (2)"
+SHEET_HANG_TON_NAME = "Quản lí tồn" 
+TIEN_BAN_HANG = "TIỀN BÁN HÀNG (2)" 
 
 MENU_TREE = ["📥 Nhập đơn hàng", "📄 Tra cứu đơn hàng", "🖨️ In đơn hàng", "📊 Con số biết nói", "👉 Về chúng tôi"]
 
+# --- DANH MỤC SKU MẶT HÀNG ---
 MIT_500G = "MÍT 500G"
 THAP_CAM_500G = "THẬP CẨM 500G"
 CHUOI_SAY_ME_DUONG_500G = "CHUỐI SẤY MÈ ĐƯỜNG 500G"
@@ -33,304 +36,96 @@ DIEU_RANG_MUOI_200G = "ĐIỀU RANG MUỐI 200G"
 DIEU_RANG_MUOI_500G = "ĐIỀU RANG MUỐI 500G"
 DIEU_MAM_OT_500G = "ĐIỀU MẮM ỚT 500G"
 
-
+# Sơ đồ khớp cột chính xác trên Google Sheet của bạn
 product_column_map = {
-    MIT_500G: 15,
-    THAP_CAM_500G: 16,
-    CHUOI_SAY_ME_DUONG_500G: 17,
-    CHUOI_SAY_MOC_500G: 18,
-    KHOAI_TAY_RONG_BIEN_250G: 19,
-    KHOAI_TAY_MAM_250G: 20,
-    KHOAI_MON_TRUNG_CUA_250G: 21,
-    NEP_CHAY_CHA_BONG_150G_X3: 22,
-    NEP_CHAY_CHA_BONG_150G_X5: 23,
-    COM_CHAY_CHA_BONG_200G: 24,
-    GAO_LUT_RONG_BIEN_200G: 25,
-    BANH_TRANG_MAM: 26,
-    MAT_ONG_500ML: 27,
-    MAT_ONG_1_LIT: 28,
-    MAM_1_LIT: 29,
-    DIEU_RANG_MUOI_200G: 30,
-    DIEU_RANG_MUOI_500G: 31,
-    DIEU_MAM_OT_500G: 32,
+    MIT_500G: 15, THAP_CAM_500G: 16, CHUOI_SAY_ME_DUONG_500G: 17, CHUOI_SAY_MOC_500G: 18, 
+    KHOAI_TAY_RONG_BIEN_250G: 19, KHOAI_TAY_MAM_250G: 20, KHOAI_MON_TRUNG_CUA_250G: 21, 
+    NEP_CHAY_CHA_BONG_150G_X3: 22, NEP_CHAY_CHA_BONG_150G_X5: 23, COM_CHAY_CHA_BONG_200G: 24, 
+    GAO_LUT_RONG_BIEN_200G: 25, BANH_TRANG_MAM: 26, MAT_ONG_500ML: 27, MAT_ONG_1_LIT: 28, 
+    MAM_1_LIT: 29, DIEU_RANG_MUOI_200G: 30, DIEU_RANG_MUOI_500G: 31, DIEU_MAM_OT_500G: 32
 }
 
-thoi_gian_nhan_hang = [
-                        "",
-                        "Nhận trực tiếp - Trưa thứ 7", 
-                        "Bookship - Chiều thứ 7", 
-                        "Bookship - Chủ nhật", 
-                        ]
+thoi_gian_nhan_hang = ["", "Nhận trực tiếp - Trưa thứ 7", "Bookship - Chiều thứ 7", "Bookship - Chủ nhật"]
+TARGET_SALES = 200000000
+SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
-
-TARGET_SALES = 200_000_000
-SCOPE=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-
-
+# Thông tin tài khoản cổng thanh toán VietQR
 STK = "2845"
 TEN_CHU_TK = "PHAM THI CAM TU"
 BIN_BANK = "970422"
 
+# --- HIỆU ỨNG ANIMATION MÈO CHÓ CHẠY ĐÁY MÀN HÌNH ---
 MEO_HTML = """
-<!-- Mèo chạy trước -->
 <div id="neko-container" style="position: fixed; bottom: 0; left: 0; font-size: 35px; z-index: 9999;">
-  <div id="hover-text" style="
-    display: none;
-    font-size: 12px;
-    color: white;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 4px 10px;
-    border-radius: 15px;
-    margin-bottom: 2px;
-    text-align: center;
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
-  ">
-    Xê raaaaaaa
-  </div>
-  <div id="neko">🐈</div>
+<div id="hover-text" style=" display: none; font-size: 12px; color: white; background: rgba(0, 0, 0, 0.6); padding: 4px 10px; border-radius: 15px; margin-bottom: 2px; text-align: center; position: relative; left: 50%; transform: translateX(-50%); "> Xê raaaaaaa </div>
+<div id="neko">🐈</div>
 </div>
-
-<!-- Chó chạy sau -->
 <div id="dog-container" style="position: fixed; bottom: 0; left: 0; font-size: 35px; z-index: 9998;">
-  <div id="dog-hover-text" style="
-    display: none;
-    font-size: 12px;
-    color: white;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 4px 10px;
-    border-radius: 15px;
-    margin-bottom: 2px;
-    text-align: center;
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
-  ">
-    Gâu gâu!
-  </div>
-  <div id="dog">🐕</div>
+<div id="dog-hover-text" style=" display: none; font-size: 12px; color: white; background: rgba(0, 0, 0, 0.6); padding: 4px 10px; border-radius: 15px; margin-bottom: 2px; text-align: center; position: relative; left: 50%; transform: translateX(-50%); "> Gâu gâu! </div>
+<div id="dog">🐕</div>
 </div>
-
-<!-- 💨 Xì hơi mèo -->
-<div id="cat-trail" style="position: fixed; bottom: 0; left: 0; font-size: 30px; display: none; z-index: 9996;">
-  💨
-</div>
-
+<div id="cat-trail" style="position: fixed; bottom: 0; left: 0; font-size: 30px; display: none; z-index: 9996;"> 💨 </div>
 <script>
-let nekoContainer = document.getElementById("neko-container");
-let neko = document.getElementById("neko");
-let hoverText = document.getElementById("hover-text");
-
-let dogContainer = document.getElementById("dog-container");
-let dog = document.getElementById("dog");
-let dogHoverText = document.getElementById("dog-hover-text");
-let catTrail = document.getElementById("cat-trail");
-
-// mèo trước, chó sau
-let catPos = window.innerWidth;
-let dogPos = catPos + 140;
-
-let catSpeed = 2.3;
-let baseDogSpeed = 3.2;
-let dogSpeed = baseDogSpeed;
-
-let dogOffset = 0;
-let fartCooldown = false;
-
-function catFart() {
-  if (fartCooldown) return;
-
-  fartCooldown = true;
-
-  // khói
-  catTrail.style.left = (catPos + 15) + "px";
-  catTrail.style.display = "block";
-
-  // chó té ngửa
-  dogContainer.style.transform = "rotate(90deg)";
-  dogOffset = 80;
-
-  setTimeout(() => {
-    catTrail.style.display = "none";
-    dogContainer.style.transform = "rotate(0deg)";
-    fartCooldown = false;
-  }, 600);
-}
-
-function moveAnimals() {
-  catPos -= catSpeed;
-
-  // chó đuổi mèo
-  if (!fartCooldown) {
-    dogPos -= dogSpeed;
-  }
-
-  // chó bị đẩy lùi
-  if (dogOffset > 0) {
-    dogOffset -= 0.8;
-    if (dogOffset < 0) dogOffset = 0;
-  }
-
-  // khoảng cách
-  let distance = dogPos - catPos;
-
-  // nếu chó tới gần → mèo xì hơi
-  if (distance < 80 && !fartCooldown) {
-    catFart();
-  }
-
-  // reset khi ra khỏi màn hình
-  if (catPos < -60) {
-    catPos = window.innerWidth + 40;
-    dogPos = catPos + 140;
-  }
-
-  nekoContainer.style.left = catPos + "px";
-  dogContainer.style.left = (dogPos + dogOffset) + "px";
-
-  requestAnimationFrame(moveAnimals);
-}
-moveAnimals();
-
-// Hover mèo: hiện chữ + đổi mèo tím + chó chạy chậm
-nekoContainer.addEventListener("mouseover", () => {
-  hoverText.style.display = "block";
-  neko.innerText = "🐈‍⬛";
-  dogSpeed = 1.0; // chạy chậm
-});
-nekoContainer.addEventListener("mouseout", () => {
-  hoverText.style.display = "none";
-  neko.innerText = "🐈";
-  dogSpeed = baseDogSpeed; // về tốc độ bình thường
-});
-
-// Click mèo → xì hơi ngay
-nekoContainer.addEventListener("click", () => {
-  catFart();
-});
-
-// Hover chó
-dogContainer.addEventListener("mouseover", () => {
-  dogHoverText.style.display = "block";
-  dog.innerText = "🐕‍🦺";
-});
-dogContainer.addEventListener("mouseout", () => {
-  dogHoverText.style.display = "none";
-  dog.innerText = "🐕";
-});
-
-// Double click chó → tăng tốc
-dogContainer.addEventListener("click", () => {
-  dogSpeed = 4.5;
-  setTimeout(() => {
-    dogSpeed = baseDogSpeed;
-  }, 2000);
-});
+let nekoContainer = document.getElementById("neko-container"); let neko = document.getElementById("neko"); let hoverText = document.getElementById("hover-text"); let dogContainer = document.getElementById("dog-container"); let dog = document.getElementById("dog"); let dogHoverText = document.getElementById("dog-hover-text"); let catTrail = document.getElementById("cat-trail");
+let catPos = window.innerWidth; let dogPos = catPos + 140; let catSpeed = 2.3; let baseDogSpeed = 3.2; let dogSpeed = baseDogSpeed; let dogOffset = 0; let fartCooldown = false;
+function catFart() {if (fartCooldown) return; fartCooldown = true; catTrail.style.left = (catPos + 15) + "px"; catTrail.style.display = "block"; dogContainer.style.transform = "rotate(90deg)"; dogOffset = 80; setTimeout(() => {catTrail.style.display = "none"; dogContainer.style.transform = "rotate(0deg)"; fartCooldown = false; }, 600); }
+function moveAnimals() {catPos -= catSpeed; if (!fartCooldown) {dogSpeed = baseDogSpeed; dogPos -= dogSpeed; } if (dogOffset > 0) {dogOffset -= 0.8; if (dogOffset < 0) dogOffset = 0; } let distance = dogPos - catPos; if (distance < 80 && !fartCooldown) {catFart(); } if (catPos < -60) {catPos = window.innerWidth + 40; dogPos = catPos + 140; } nekoContainer.style.left = catPos + "px"; dogContainer.style.left = (dogPos + dogOffset) + "px"; requestAnimationFrame(moveAnimals); } moveAnimals();
+nekoContainer.addEventListener("mouseover", () => {hoverText.style.display = "block"; neko.innerText = "🐈‍⬛"; dogSpeed = 1.0; }); nekoContainer.addEventListener("mouseout", () => {hoverText.style.display = "none"; neko.innerText = "🐈"; dogSpeed = baseDogSpeed; }); nekoContainer.addEventListener("click", () => {catFart(); });
+dogContainer.addEventListener("mouseover", () => {dogHoverText.style.display = "block"; dog.innerText = "🐕‍🦺"; }); dogContainer.addEventListener("mouseout", () => {dogHoverText.style.display = "none"; dog.innerText = "🐕"; }); dogContainer.addEventListener("click", () => {dogSpeed = 4.5; setTimeout(() => {dogSpeed = baseDogSpeed; }, 2000); });
 </script>
-
 """
 
 PROGRESS_BAR_HTML = """
-    <div style="position: relative; background-color: #e0e0e0; height: 24px; border-radius: 12px; overflow: hidden; margin-top: 10px; margin-bottom: 10px;">
-        <div style="
-            width: {percent}%;
-            background-color: #4B8BBE;
-            height: 100%;
-            transition: width 0.5s;
-        "></div>
-        <div style="
-            position: absolute;
-            top: 0;
-            left: calc({percent}% - 20px);
-            height: 100%;
-            width: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        ">
-            🚀
-        </div>
-    </div>
-    """
-
-PRINT_HTML = """
-      <div id="print-area" style="display:none;">
-          <h3>📌 Thông tin khách hàng</h3>
-          {customer_table}
-
-          <h3>🛒 Mặt hàng đã đặt</h3>
-          {order_table}
-      </div>
-
-      <button id="printBtn" style="
-          background-color:#000000; 
-          color:white; 
-          padding:0.4rem 0.9rem; 
-          border:none; 
-          border-radius:0.5rem; 
-          cursor:pointer; 
-          margin-top:-6px; 
-          vertical-align:middle;
-          font-family: 'Source Sans Pro', sans-serif; 
-          font-size:1rem; 
-          font-weight:400;
-          line-height:1.5;
-      ">
-          🖨️ In đơn hàng
-      </button>
-
-      <script>
-      document.getElementById("printBtn").addEventListener("click", function() {{
-          const printArea = document.getElementById("print-area");
-          if (!printArea) {{
-              alert("Không tìm thấy nội dung để in!");
-              return;
-          }}
-          const printWindow = window.open('', '', 'width=800,height=600');
-          printWindow.document.write('<html><head><title>In đơn hàng</title>');
-          printWindow.document.write('<style>');
-          printWindow.document.write('body{{font-family:Arial;padding:20px;}}');
-          printWindow.document.write('table{{border-collapse:collapse;width:100%;margin-top:10px;}}');
-          printWindow.document.write('th,td{{border:1px solid #ccc;padding:8px;text-align:left;}}');
-          printWindow.document.write('</style></head><body>');
-          printWindow.document.write(printArea.innerHTML);
-          printWindow.document.write('</body></html>');
-          printWindow.document.close();
-          printWindow.focus();
-          printWindow.print();
-      }});
-      </script>
-      """
+<div style="position: relative; background-color: #e0e0e0; height: 24px; border-radius: 12px; overflow: hidden; margin-top: 10px; margin-bottom: 10px;">
+ <div style=" width: {percent}%; background-color: #4B8BBE; height: 100%; transition: width 0.5s; "></div>
+ <div style=" position: absolute; top: 0; left: calc({percent}% - 20px); height: 100%; width: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; "> 🚀 </div>
+</div>
+"""
 
 NOTE_HTML = """
-                <div style="text-align: center; font-size: 13px; color: gray;">
-                    Sheet đang hiển thị chỉ có quyền xem, không thể chỉnh sửa
-                </div>
-                """
+<div style="text-align: center; font-size: 13px; color: gray;"> Sheet đang hiển thị chỉ có quyền xem, không thể chỉnh sửa </div>
+"""
+
+PRINT_HTML = """
+<div id="print-area" style="display:none;">
+ <h3>📌 Thông tin khách hàng</h3> {customer_table}
+ <h3>🛒 Mặt hàng đã đặt</h3> {order_table}
+</div>
+<button id="printBtn" style=" background-color:#000000; color:white; padding:0.4rem 0.9rem; border:none; border-radius:0.5rem; cursor:pointer; margin-top:-6px; vertical-align:middle; font-family: 'Source Sans Pro', sans-serif; font-size:1rem; font-weight:400; line-height:1.5; "> 🖨️ In đơn hàng </button>
+<script>
+document.getElementById("printBtn").addEventListener("click", function() {{const printArea = document.getElementById("print-area"); if (!printArea) {{alert("Không tìm thấy nội dung để in!"); return; }} const printWindow = window.open('', '', 'width=800,height=600'); printWindow.document.write('<html><head><title>In đơn hàng</title><style>body{{font-family:Arial;padding:20px;}}table{{border-collapse:collapse;width:100%;margin-top:10px;}}th,td{{border:1px solid #ccc;padding:8px;text-align:left;}}</style></head><body>'); printWindow.document.write(printArea.innerHTML); printWindow.document.write('</body></html>'); printWindow.document.close(); printWindow.focus(); printWindow.print(); }});
+</script>
+"""
+
+PRINT_MULTI_HTML = """
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; padding: 10px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }}
+            th, td {{ border: 1px solid #000; padding: 6px; text-align: left; }}
+            th {{ background-color: #f2f2f2; }}
+            @media print {{ .order {{ page-break-after: always; }} }}
+        </style>
+    </head>
+    <body>
+        <div class="print-container">
+            {all_orders_html}
+        </div>
+        <script>
+            // Chờ nội dung HTML render xong là tự động gọi hộp thoại in của Windows/Mac lập tức
+            window.onload = function() {{
+                window.print();
+            }};
+        </script>
+    </body>
+    </html>
+    """
 
 TIEU_DE_HTML = """
-    <style>
-    .hero-title {
-        text-align: left;
-        color: #1E3A8A;
-        font-size: 3em;
-        font-weight: bold;
-        font-family: 'Montserrat', sans-serif;
-    }
-    .section-title {
-        font-size: 2em;
-        font-weight: 700;
-        margin: 40px 0 20px;
-        color: #002B5B;
-    }
-    </style>
-
-    <div class="hero-title">
-        <h1>Đội tình nguyện ÔLiu</h1>
-    </div>
-    """
+<style> .hero-title {text-align: left; color: #1E3A8A; font-size: 3em; font-weight: bold; font-family: 'Montserrat', sans-serif;} .section-title {font-size: 2em; font-weight: 700; margin: 40px 0 20px; color: #002B5B;} </style>
+<div class="hero-title"> <h1>Đội tình nguyện ÔLiu</h1> </div>
+"""
 
 GIOI_THIEU_HTML = """
     <style>
@@ -378,6 +173,53 @@ GIOI_THIEU_HTML = """
     </div>
     </div>
     """
+
+SLIDER_HTML_TEMPLATE = """
+<style>
+.wrapper {{
+    width: 100%;
+    overflow: hidden;
+    background: linear-gradient(to right, var(--background-color), var(--secondary-background-color));
+    padding: 30px 0;
+    border-radius: 20px;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+    position: relative;
+}}
+
+.track {{
+    display: flex;
+    width: max-content;
+    animation: moveRight 40s linear infinite;
+}}
+
+@keyframes moveRight {{
+    0%   {{ transform: translateX(-50%); }}
+    100% {{ transform: translateX(0%); }}
+}}
+
+.track img {{
+    height: 230px;
+    width: auto;
+    margin-right: 20px;
+    border-radius: 16px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    transition: transform 0.4s ease;
+    flex-shrink: 0;
+    background-color: var(--secondary-background-color);
+}}
+
+.track img:hover {{
+    transform: scale(1.05);
+}}
+</style>
+
+<div class="wrapper">
+    <div class="track">
+        {images_html}
+        {images_html}
+    </div>
+</div>
+"""
 
 SOCIAL_HTML = """
     <style>
@@ -443,88 +285,3 @@ SOCIAL_HTML = """
         </div>
     </div>
     """
-
-SLIDER_HTML_TEMPLATE = """
-<style>
-.wrapper {{
-    width: 100%;
-    overflow: hidden;
-    background: linear-gradient(to right, var(--background-color), var(--secondary-background-color));
-    padding: 30px 0;
-    border-radius: 20px;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
-    position: relative;
-}}
-
-.track {{
-    display: flex;
-    width: max-content;
-    animation: moveRight 40s linear infinite;
-}}
-
-@keyframes moveRight {{
-    0%   {{ transform: translateX(-50%); }}
-    100% {{ transform: translateX(0%); }}
-}}
-
-.track img {{
-    height: 230px;
-    width: auto;
-    margin-right: 20px;
-    border-radius: 16px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-    transition: transform 0.4s ease;
-    flex-shrink: 0;
-    background-color: var(--secondary-background-color);
-}}
-
-.track img:hover {{
-    transform: scale(1.05);
-}}
-</style>
-
-<div class="wrapper">
-    <div class="track">
-        {images_html}
-        {images_html}
-    </div>
-</div>
-"""
-
-PRINT_MULTI_HTML = """
-<script>
-function printAll() {{
-    const win = window.open('', '', 'width=900,height=700');
-
-    win.document.write(`
-        <html>
-        <head>
-            <title>In hàng loạt</title>
-            <style>
-                body {{ font-family: Arial; padding: 20px; }}
-                table {{ border-collapse: collapse; width: 100%; margin-top: 10px; }}
-                th, td {{ border: 1px solid #ccc; padding: 8px; }}
-
-                .order {{
-                    page-break-after: always;
-                }}
-            </style>
-        </head>
-        <body>
-            {all_orders_html}
-        </body>
-        </html>
-    `);
-
-    win.document.close();
-
-    win.onload = function() {{
-        win.focus();
-        win.print();
-    }};
-}}
-
-// auto call
-printAll();
-</script>
-"""
